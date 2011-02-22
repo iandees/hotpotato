@@ -534,15 +534,17 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         }
 
         context.getConnectionPool().connectionClosed(event.getConnection());
+
+        if (event.getRetryRequests() != null) {
+            context.restoreRequestsToQueue(event.getRetryRequests());
+        }
+
         if ((context.getConnectionPool().getTotalConnections() == 0) && context.getQueue().isEmpty() &&
             this.cleanupInactiveHostContexts) {
             // No requests in queue, no connections open or opening... Cleanup resources.
             this.contextMap.remove(id);
         }
 
-        if (event.getRetryRequests() != null) {
-            context.restoreRequestsToQueue(event.getRetryRequests());
-        }
         this.drainQueueAndProcessResult(context);
     }
 
