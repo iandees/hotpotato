@@ -16,15 +16,16 @@
 
 package com.biasedbit.hotpotato.client.timeout;
 
-import com.biasedbit.hotpotato.client.HttpRequestContext;
-import com.biasedbit.hotpotato.request.HttpRequestFuture;
-import com.biasedbit.hotpotato.request.HttpRequestFutureListener;
-import org.jboss.netty.util.internal.ExecutorUtil;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import org.jboss.netty.util.internal.ExecutorUtil;
+
+import com.biasedbit.hotpotato.client.HttpRequestContext;
+import com.biasedbit.hotpotato.request.HttpRequestFuture;
+import com.biasedbit.hotpotato.request.HttpRequestFutureListener;
 
 /**
  * Basic implementation of a {@link TimeoutManager} that launches a thread with a {@link TimeoutChecker}.
@@ -65,7 +66,7 @@ public class BasicTimeoutManager implements TimeoutManager {
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public BasicTimeoutManager(int maxThreads) {
+    public BasicTimeoutManager(final int maxThreads) {
         if (maxThreads <= 0) {
             this.executor = Executors.newCachedThreadPool();
         } else {
@@ -74,27 +75,27 @@ public class BasicTimeoutManager implements TimeoutManager {
         this.internalExecutor = true;
     }
 
-    public BasicTimeoutManager(Executor executor) {
+    public BasicTimeoutManager(final Executor executor) {
         this.executor = executor;
         this.internalExecutor = false;
     }
 
     // TimeoutManager -------------------------------------------------------------------------------------------------
 
-    @Override
+
     public boolean init() {
         return true;
     }
 
-    @Override
+
     public void terminate() {
         if (this.internalExecutor) {
             ExecutorUtil.terminate(this.executor);
         }
     }
 
-    @Override
-    public void manageRequestTimeout(HttpRequestContext context) {
+
+    public void manageRequestTimeout(final HttpRequestContext context) {
         this.executor.execute(new TimeoutChecker(context));
     }
 
@@ -126,7 +127,7 @@ public class BasicTimeoutManager implements TimeoutManager {
 
         // constructors ---------------------------------------------------------------------------------------------------
 
-        public TimeoutChecker(HttpRequestContext request) {
+        public TimeoutChecker(final HttpRequestContext request) {
             this.request = request;
             this.latch = new CountDownLatch(1);
         }
@@ -134,7 +135,7 @@ public class BasicTimeoutManager implements TimeoutManager {
         // Runnable -------------------------------------------------------------------------------------------------------
 
         @SuppressWarnings({"unchecked"})
-        @Override
+
         public void run() {
             this.request.getFuture().addListener(this);
 
@@ -158,8 +159,8 @@ public class BasicTimeoutManager implements TimeoutManager {
 
         // HttpRequestFutureListener ----------------------------------------------------------------------------------
 
-        @Override
-        public void operationComplete(HttpRequestFuture httpRequestFuture) throws Exception {
+
+        public void operationComplete(final HttpRequestFuture httpRequestFuture) throws Exception {
             this.latch.countDown();
         }
     }

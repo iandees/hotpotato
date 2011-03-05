@@ -31,13 +31,13 @@ public class ConnectionOpenEvent implements HttpClientEvent {
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public ConnectionOpenEvent(HttpConnection connection) {
+    public ConnectionOpenEvent(final HttpConnection connection) {
         this.connection = connection;
     }
 
     // HttpClientEvent ------------------------------------------------------------------------------------------------
 
-    @Override
+
     public EventType getEventType() {
         return EventType.CONNECTION_OPEN;
     }
@@ -49,6 +49,7 @@ public class ConnectionOpenEvent implements HttpClientEvent {
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {

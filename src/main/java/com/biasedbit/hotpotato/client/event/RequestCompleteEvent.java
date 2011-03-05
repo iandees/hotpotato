@@ -31,13 +31,13 @@ public class RequestCompleteEvent implements HttpClientEvent {
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public RequestCompleteEvent(HttpRequestContext context) {
+    public RequestCompleteEvent(final HttpRequestContext context) {
         this.context = context;
     }
 
     // HttpClientEvent ------------------------------------------------------------------------------------------------
 
-    @Override
+
     public EventType getEventType() {
         return EventType.REQUEST_COMPLETE;
     }
@@ -49,6 +49,7 @@ public class RequestCompleteEvent implements HttpClientEvent {
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {

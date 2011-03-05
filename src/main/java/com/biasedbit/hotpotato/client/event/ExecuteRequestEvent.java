@@ -31,13 +31,13 @@ public class ExecuteRequestEvent implements HttpClientEvent {
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public ExecuteRequestEvent(HttpRequestContext context) {
+    public ExecuteRequestEvent(final HttpRequestContext context) {
         this.context = context;
     }
 
     // HttpClientEvent ------------------------------------------------------------------------------------------------
 
-    @Override
+
     public EventType getEventType() {
         return EventType.EXECUTE_REQUEST;
     }
@@ -49,6 +49,7 @@ public class ExecuteRequestEvent implements HttpClientEvent {
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {

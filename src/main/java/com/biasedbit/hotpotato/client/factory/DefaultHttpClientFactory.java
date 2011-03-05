@@ -114,7 +114,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
 
     // HttpClientFactory ----------------------------------------------------------------------------------------------
 
-    @Override
+
     public HttpClient getClient() {
         AbstractHttpClient client;
         if (this.debug) {
@@ -149,7 +149,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return debug;
     }
 
-    public void setDebug(boolean debug) {
+    public void setDebug(final boolean debug) {
         this.debug = debug;
     }
 
@@ -157,7 +157,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return gatherEventHandlingStats;
     }
 
-    public void setGatherEventHandlingStats(boolean gatherEventHandlingStats) {
+    public void setGatherEventHandlingStats(final boolean gatherEventHandlingStats) {
         this.gatherEventHandlingStats = gatherEventHandlingStats;
     }
 
@@ -165,7 +165,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return useSsl;
     }
 
-    public void setUseSsl(boolean useSsl) {
+    public void setUseSsl(final boolean useSsl) {
         this.useSsl = useSsl;
     }
 
@@ -173,7 +173,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return requestCompressionLevel;
     }
 
-    public void setRequestCompressionLevel(int requestCompressionLevel) {
+    public void setRequestCompressionLevel(final int requestCompressionLevel) {
         if ((requestCompressionLevel < 0) || (requestCompressionLevel > 9)) {
             throw new IllegalArgumentException("RequestCompressionLevel must be in range [0;9] (0 = none, 9 = max)");
         }
@@ -184,7 +184,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return automaticInflate;
     }
 
-    public void setAutomaticInflate(boolean automaticInflate) {
+    public void setAutomaticInflate(final boolean automaticInflate) {
         this.automaticInflate = automaticInflate;
     }
 
@@ -192,7 +192,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return requestChunkSize;
     }
 
-    public void setRequestChunkSize(int requestChunkSize) {
+    public void setRequestChunkSize(final int requestChunkSize) {
         if (requestChunkSize < 128) {
             throw new IllegalArgumentException("Minimum accepted chunk size is 128b");
         }
@@ -203,11 +203,11 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return aggregateChunks;
     }
 
-    public void setAggregateChunks(boolean aggregateChunks) {
+    public void setAggregateChunks(final boolean aggregateChunks) {
         this.aggregateChunks = aggregateChunks;
     }
 
-    public void setMaxConnectionsPerHost(int maxConnectionsPerHost) {
+    public void setMaxConnectionsPerHost(final int maxConnectionsPerHost) {
         if (maxQueuedRequests <= 1) {
             throw new IllegalArgumentException("MaxConnectionsPerHost must be > 1");
         }
@@ -218,7 +218,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return this.maxQueuedRequests;
     }
 
-    public void setMaxQueuedRequests(int maxQueuedRequests) {
+    public void setMaxQueuedRequests(final int maxQueuedRequests) {
         if (maxQueuedRequests <= 1) {
             throw new IllegalArgumentException("MaxQueuedRequests must be > 1");
         }
@@ -229,7 +229,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return connectionTimeoutInMillis;
     }
 
-    public void setConnectionTimeoutInMillis(int connectionTimeoutInMillis) {
+    public void setConnectionTimeoutInMillis(final int connectionTimeoutInMillis) {
         if (connectionTimeoutInMillis < 0) {
             throw new IllegalArgumentException("ConnectionTimeoutInMillis must be >= 0 (0 means infinite)");
         }
@@ -240,7 +240,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return requestTimeoutInMillis;
     }
 
-    public void setRequestTimeoutInMillis(int requestTimeoutInMillis) {
+    public void setRequestTimeoutInMillis(final int requestTimeoutInMillis) {
         if (requestTimeoutInMillis < 0) {
             throw new IllegalArgumentException("RequestTimeoutInMillis must be >= 0 (0 means infinite)");
         }
@@ -251,7 +251,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return useNio;
     }
 
-    public void setUseNio(boolean useNio) {
+    public void setUseNio(final boolean useNio) {
         this.useNio = useNio;
     }
 
@@ -259,7 +259,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return maxIoWorkerThreads;
     }
 
-    public void setMaxIoWorkerThreads(int maxIoWorkerThreads) {
+    public void setMaxIoWorkerThreads(final int maxIoWorkerThreads) {
         if (maxIoWorkerThreads <= 1) {
             throw new IllegalArgumentException("Minimum value for maxIoWorkerThreads is 1");
         }
@@ -270,7 +270,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return maxEventProcessorHelperThreads;
     }
 
-    public void setMaxEventProcessorHelperThreads(int maxEventProcessorHelperThreads) {
+    public void setMaxEventProcessorHelperThreads(final int maxEventProcessorHelperThreads) {
         if (maxEventProcessorHelperThreads <= 3) {
             throw new IllegalArgumentException("Minimum value for maxEventProcessorHelperThreads is 3");
         }
@@ -281,7 +281,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return hostContextFactory;
     }
 
-    public void setHostContextFactory(HostContextFactory hostContextFactory) {
+    public void setHostContextFactory(final HostContextFactory hostContextFactory) {
         this.hostContextFactory = hostContextFactory;
     }
 
@@ -289,7 +289,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return connectionFactory;
     }
 
-    public void setConnectionFactory(HttpConnectionFactory connectionFactory) {
+    public void setConnectionFactory(final HttpConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
     }
 
@@ -297,7 +297,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return futureFactory;
     }
 
-    public void setFutureFactory(HttpRequestFutureFactory futureFactory) {
+    public void setFutureFactory(final HttpRequestFutureFactory futureFactory) {
         this.futureFactory = futureFactory;
     }
 
@@ -305,7 +305,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return timeoutManager;
     }
 
-    public void setTimeoutManager(TimeoutManager timeoutManager) {
+    public void setTimeoutManager(final TimeoutManager timeoutManager) {
         this.timeoutManager = timeoutManager;
     }
 
@@ -313,7 +313,7 @@ public class DefaultHttpClientFactory implements HttpClientFactory {
         return cleanupInactiveHostContexts;
     }
 
-    public void setCleanupInactiveHostContexts(boolean cleanupInactiveHostContexts) {
+    public void setCleanupInactiveHostContexts(final boolean cleanupInactiveHostContexts) {
         this.cleanupInactiveHostContexts = cleanupInactiveHostContexts;
     }
 }

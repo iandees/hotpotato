@@ -27,13 +27,13 @@ public class ConcurrentHttpRequestFutureFactory implements HttpRequestFutureFact
 
     // HttpRequestFuture ----------------------------------------------------------------------------------------------
 
-    @Override
+
     public <T> HttpRequestFuture<T> getFuture() {
         return new ConcurrentHttpRequestFuture<T>();
     }
 
-    @Override
-    public <T> HttpRequestFuture<T> getFuture(boolean cancellable) {
+
+    public <T> HttpRequestFuture<T> getFuture(final boolean cancellable) {
         return new ConcurrentHttpRequestFuture<T>(cancellable);
     }
 }

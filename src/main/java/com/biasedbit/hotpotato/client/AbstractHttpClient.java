@@ -16,6 +16,41 @@
 
 package com.biasedbit.hotpotato.client;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.net.ssl.SSLEngine;
+
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
+import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.group.ChannelGroup;
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.channel.socket.oio.OioClientSocketChannelFactory;
+import org.jboss.netty.example.securechat.SecureChatSslContextFactory;
+import org.jboss.netty.handler.codec.http.HttpChunkAggregator;
+import org.jboss.netty.handler.codec.http.HttpClientCodec;
+import org.jboss.netty.handler.codec.http.HttpContentCompressor;
+import org.jboss.netty.handler.codec.http.HttpContentDecompressor;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+import org.jboss.netty.handler.codec.http.HttpRequest;
+import org.jboss.netty.handler.ssl.SslHandler;
+import org.jboss.netty.util.internal.ExecutorUtil;
+
 import com.biasedbit.hotpotato.client.connection.HttpConnection;
 import com.biasedbit.hotpotato.client.connection.HttpConnectionListener;
 import com.biasedbit.hotpotato.client.connection.factory.DefaultHttpConnectionFactory;
@@ -40,39 +75,6 @@ import com.biasedbit.hotpotato.response.DiscardProcessor;
 import com.biasedbit.hotpotato.response.HttpResponseProcessor;
 import com.biasedbit.hotpotato.util.CleanupChannelGroup;
 import com.biasedbit.hotpotato.util.NamedThreadFactory;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.channel.socket.oio.OioClientSocketChannelFactory;
-import org.jboss.netty.example.securechat.SecureChatSslContextFactory;
-import org.jboss.netty.handler.codec.http.HttpChunkAggregator;
-import org.jboss.netty.handler.codec.http.HttpClientCodec;
-import org.jboss.netty.handler.codec.http.HttpContentCompressor;
-import org.jboss.netty.handler.codec.http.HttpContentDecompressor;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.util.internal.ExecutorUtil;
-
-import javax.net.ssl.SSLEngine;
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Abstract implementation of the {@link HttpClient} interface. Contains most of the boilerplate code that other
@@ -129,10 +131,11 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
     protected static final Logger LOG = Logger.getLogger(AbstractHttpClient.class);
     protected static final HttpClientEvent POISON = new HttpClientEvent() {
-        @Override
+
         public EventType getEventType() {
             return null;
         }
+
 
         @Override
         public String toString() {
@@ -215,7 +218,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
     // HttpClient -----------------------------------------------------------------------------------------------------
 
-    @Override
+
     public boolean init() {
         if (this.timeoutManager == null) {
             // Consumes less resources, puts less emphasis on precision.
@@ -254,7 +257,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         this.channelGroup = new CleanupChannelGroup(this.toString());
         // Create a pipeline without the last handler (it will be added right before connecting).
         this.pipelineFactory = new ChannelPipelineFactory() {
-            @Override
+
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
                 if (useSsl) {
@@ -279,7 +282,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         };
 
         this.executor.execute(new Runnable() {
-            @Override
+
             public void run() {
                 eventHandlingLoop();
             }
@@ -287,9 +290,9 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         return true;
     }
 
-    @Override
+
     public void terminate() {
-        if (this.terminate || this.eventQueue == null) {
+        if (this.terminate || (this.eventQueue == null)) {
             return;
         }
 
@@ -349,21 +352,21 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         }
     }
 
-    @Override
-    public <T> HttpRequestFuture<T> execute(String host, int port, HttpRequest request,
-                                            HttpResponseProcessor<T> processor)
+
+    public <T> HttpRequestFuture<T> execute(final String host, final int port, final HttpRequest request,
+                                            final HttpResponseProcessor<T> processor)
             throws CannotExecuteRequestException {
         return this.execute(host, port, this.requestTimeoutInMillis, request, processor);
     }
 
-    @Override
-    public HttpRequestFuture execute(String host, int port, HttpRequest request) throws CannotExecuteRequestException {
+
+    public HttpRequestFuture execute(final String host, final int port, final HttpRequest request) throws CannotExecuteRequestException {
         return this.execute(host, port, request, DiscardProcessor.getInstance());
     }
 
-    @Override
-    public <T> HttpRequestFuture<T> execute(String host, int port, int timeout, HttpRequest request,
-                                            HttpResponseProcessor<T> processor)
+
+    public <T> HttpRequestFuture<T> execute(final String host, final int port, final int timeout, final HttpRequest request,
+                                            final HttpResponseProcessor<T> processor)
             throws CannotExecuteRequestException {
         if (this.eventQueue == null) {
             throw new CannotExecuteRequestException(this.getClass().getSimpleName() + " was not initialised");
@@ -388,23 +391,23 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         return future;
     }
 
-    @Override
+
     public boolean isHttps() {
         return this.useSsl;
     }
 
     // HttpConnectionListener -----------------------------------------------------------------------------------------
 
-    @Override
-    public void connectionOpened(HttpConnection connection) {
+
+    public void connectionOpened(final HttpConnection connection) {
         if (this.terminate) {
             return;
         }
         this.eventQueue.offer(new ConnectionOpenEvent(connection));
     }
 
-    @Override
-    public void connectionTerminated(HttpConnection connection, Collection<HttpRequestContext> retryRequests) {
+
+    public void connectionTerminated(final HttpConnection connection, final Collection<HttpRequestContext> retryRequests) {
         if (this.terminate) {
             if ((retryRequests != null) && !retryRequests.isEmpty()) {
                 for (HttpRequestContext request : retryRequests) {
@@ -416,24 +419,24 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         this.eventQueue.offer(new ConnectionClosedEvent(connection, retryRequests));
     }
 
-    @Override
-    public void connectionTerminated(HttpConnection connection) {
+
+    public void connectionTerminated(final HttpConnection connection) {
         if (this.terminate) {
             return;
         }
         this.eventQueue.offer(new ConnectionClosedEvent(connection, null));
     }
 
-    @Override
-    public void connectionFailed(HttpConnection connection) {
+
+    public void connectionFailed(final HttpConnection connection) {
         if (this.terminate) {
             return;
         }
         this.eventQueue.offer(new ConnectionFailedEvent(connection));
     }
 
-    @Override
-    public void requestFinished(HttpConnection connection, HttpRequestContext context) {
+
+    public void requestFinished(final HttpConnection connection, final HttpRequestContext context) {
         if (this.terminate) {
             return;
         }
@@ -480,7 +483,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
     // private helpers --------------------------------------------------------------------------------------------
 
-    protected void handleExecuteRequest(ExecuteRequestEvent event) {
+    protected void handleExecuteRequest(final ExecuteRequestEvent event) {
         // First, add it to the queue (or create a queue for given host if one does not exist)
         String id = this.hostId(event.getContext());
         HostContext context = this.contextMap.get(id);
@@ -495,7 +498,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         this.drainQueueAndProcessResult(context);
     }
 
-    protected void handleRequestComplete(RequestCompleteEvent event) {
+    protected void handleRequestComplete(final RequestCompleteEvent event) {
         this.queuedRequests.decrementAndGet();
 
         HostContext context = this.contextMap.get(this.hostId(event.getContext()));
@@ -507,7 +510,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         this.drainQueueAndProcessResult(context);
     }
 
-    protected void handleConnectionOpen(ConnectionOpenEvent event) {
+    protected void handleConnectionOpen(final ConnectionOpenEvent event) {
         String id = this.hostId(event.getConnection());
         HostContext context = this.contextMap.get(id);
         if (context == null) {
@@ -524,7 +527,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         }
     }
 
-    protected void handleConnectionClosed(ConnectionClosedEvent event) {
+    protected void handleConnectionClosed(final ConnectionClosedEvent event) {
         // Update the list of available connections for the same host:port.
         String id = this.hostId(event.getConnection());
         HostContext context = this.contextMap.get(id);
@@ -548,7 +551,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         this.drainQueueAndProcessResult(context);
     }
 
-    protected void handleConnectionFailed(ConnectionFailedEvent event) {
+    protected void handleConnectionFailed(final ConnectionFailedEvent event) {
         // Update the list of available connections for the same host:port.
         String id = this.hostId(event.getConnection());
         HostContext context = this.contextMap.get(id);
@@ -559,14 +562,14 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
         context.getConnectionPool().connectionFailed();
         if ((context.getConnectionPool().hasConnectionFailures() &&
-             context.getConnectionPool().getTotalConnections() == 0)) {
+             (context.getConnectionPool().getTotalConnections() == 0))) {
             // Connection failures occured and there are no more connections active or establishing, so its time to
             // fail all queued requests.
             context.failAllRequests(HttpRequestFuture.CANNOT_CONNECT);
         }
     }
 
-    protected void drainQueueAndProcessResult(HostContext context) {
+    protected void drainQueueAndProcessResult(final HostContext context) {
         HostContext.DrainQueueResult result = context.drainQueue();
         switch (result) {
             case OPEN_CONNECTION:
@@ -579,19 +582,19 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         }
     }
 
-    protected String hostId(HttpConnection connection) {
+    protected String hostId(final HttpConnection connection) {
         return this.hostId(connection.getHost(), connection.getPort());
     }
 
-    protected String hostId(HttpRequestContext context) {
+    protected String hostId(final HttpRequestContext context) {
         return this.hostId(context.getHost(), context.getPort());
     }
 
-    protected String hostId(HostContext context) {
+    protected String hostId(final HostContext context) {
         return this.hostId(context.getHost(), context.getPort());
     }
 
-    protected String hostId(String host, int port) {
+    protected String hostId(final String host, final int port) {
         return new StringBuilder().append(host).append(":").append(port).toString();
     }
 
@@ -626,7 +629,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
         // Delegate actual connection to other thread, since calling connect is a blocking call.
         this.executor.execute(new Runnable() {
-            @Override
+
             public void run() {
                 ClientBootstrap bootstrap = new ClientBootstrap(channelFactory);
                 bootstrap.setOption("reuseAddress", true);
@@ -634,8 +637,8 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
                 bootstrap.setPipeline(pipeline);
                 bootstrap.connect(new InetSocketAddress(context.getHost(), context.getPort()))
                         .addListener(new ChannelFutureListener() {
-                            @Override
-                            public void operationComplete(ChannelFuture future) throws Exception {
+
+                            public void operationComplete(final ChannelFuture future) throws Exception {
                                 if (future.isSuccess()) {
                                     // Don't even bother checking if client was already instructed to terminate since
                                     // CleanupChannelGroup takes care of that.
@@ -662,7 +665,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @param useSsl {@code true} if all connections will have SSL support, {@code false} otherwise.
      */
-    public void setUseSsl(boolean useSsl) {
+    public void setUseSsl(final boolean useSsl) {
         if (this.eventQueue != null) {
             throw new IllegalStateException("Cannot modify property after initialization");
         }
@@ -680,7 +683,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @param requestCompressionLevel Level of compression between 0 and 9; 0 = off and 9 = max.
      */
-    public void setRequestCompressionLevel(int requestCompressionLevel) {
+    public void setRequestCompressionLevel(final int requestCompressionLevel) {
         if ((requestCompressionLevel < 0) || (requestCompressionLevel > 9)) {
             throw new IllegalArgumentException("RequestCompressionLevel must be in range [0;9] (0 = none, 9 = max)");
         }
@@ -705,7 +708,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      * @param autoInflate {@code true} if the connections should automatically decompress gzip content, {@code false}
      *                    otherwise.
      */
-    public void setAutoInflate(boolean autoInflate) {
+    public void setAutoInflate(final boolean autoInflate) {
         if (this.eventQueue != null) {
             throw new IllegalStateException("Cannot modify property after initialization");
         }
@@ -725,7 +728,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @param requestChunkSize If request or response body exceeds this value
      */
-    public void setRequestChunkSize(int requestChunkSize) {
+    public void setRequestChunkSize(final int requestChunkSize) {
         if (requestChunkSize < 128) {
             throw new IllegalArgumentException("Minimum accepted chunk size is 128b");
         }
@@ -747,7 +750,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      * @param aggregateResponseChunks {@code true} to aggregate http response chunks automatically, {@code false}
      *                                otherwise.
      */
-    public void setAggregateResponseChunks(boolean aggregateResponseChunks) {
+    public void setAggregateResponseChunks(final boolean aggregateResponseChunks) {
         if (this.eventQueue != null) {
             throw new IllegalStateException("Cannot modify property after initialization");
         }
@@ -769,7 +772,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      * @param maxConnectionsPerHost Maximum number of total active connections (open + opening) per host at a given
      *                              time. Minimum value is 1.
      */
-    public void setMaxConnectionsPerHost(int maxConnectionsPerHost) {
+    public void setMaxConnectionsPerHost(final int maxConnectionsPerHost) {
         if (maxConnectionsPerHost < 1) {
             throw new IllegalArgumentException("MaxConnectionsPerHost must be > 1");
         }
@@ -794,7 +797,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @param maxQueuedRequests Maximum number of queued requests at any given moment.
      */
-    public void setMaxQueuedRequests(int maxQueuedRequests) {
+    public void setMaxQueuedRequests(final int maxQueuedRequests) {
         if (maxQueuedRequests < 1) {
             throw new IllegalArgumentException("MaxQueuedRequests must be > 1");
         }
@@ -815,7 +818,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @param connectionTimeoutInMillis Connection to host timeout, in milliseconds.
      */
-    public void setConnectionTimeoutInMillis(int connectionTimeoutInMillis) {
+    public void setConnectionTimeoutInMillis(final int connectionTimeoutInMillis) {
         if (connectionTimeoutInMillis < 0) {
             throw new IllegalArgumentException("ConnectionTimeoutInMillis must be >= 0 (0 means infinite)");
         }
@@ -843,7 +846,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @param requestTimeoutInMillis Default request timeout, in milliseconds.
      */
-    public void setRequestTimeoutInMillis(int requestTimeoutInMillis) {
+    public void setRequestTimeoutInMillis(final int requestTimeoutInMillis) {
         if (requestTimeoutInMillis <= 0) {
             throw new IllegalArgumentException("RequestTimeoutInMillis must be >= 0 (0 means infinite)");
         }
@@ -873,7 +876,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @param useNio {@code true} if this client should use NIO, {@code false} if it should use OIO.
      */
-    public void setUseNio(boolean useNio) {
+    public void setUseNio(final boolean useNio) {
         if (this.eventQueue != null) {
             throw new IllegalStateException("Cannot modify property after initialization");
         }
@@ -891,7 +894,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @param maxIoWorkerThreads Maximum number of IO worker threads.
      */
-    public void setMaxIoWorkerThreads(int maxIoWorkerThreads) {
+    public void setMaxIoWorkerThreads(final int maxIoWorkerThreads) {
         if (maxIoWorkerThreads <= 1) {
             throw new IllegalArgumentException("Minimum value for maxIoWorkerThreads is 1");
         }
@@ -916,7 +919,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @param maxEventProcessorHelperThreads Maximum number of IO worker threads.
      */
-    public void setMaxEventProcessorHelperThreads(int maxEventProcessorHelperThreads) {
+    public void setMaxEventProcessorHelperThreads(final int maxEventProcessorHelperThreads) {
         if (maxEventProcessorHelperThreads <= 3) {
             throw new IllegalArgumentException("Minimum value for maxEventProcessorHelperThreads is 3");
         }
@@ -940,7 +943,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      * @see com.biasedbit.hotpotato.client.host.factory.HostContextFactory
      * @see com.biasedbit.hotpotato.client.host.HostContext
      */
-    public void setHostContextFactory(HostContextFactory hostContextFactory) {
+    public void setHostContextFactory(final HostContextFactory hostContextFactory) {
         if (this.eventQueue != null) {
             throw new IllegalStateException("Cannot modify property after initialization");
         }
@@ -961,7 +964,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      * @see com.biasedbit.hotpotato.client.connection.factory.HttpConnectionFactory
      * @see com.biasedbit.hotpotato.client.connection.HttpConnection
      */
-    public void setConnectionFactory(HttpConnectionFactory connectionFactory) {
+    public void setConnectionFactory(final HttpConnectionFactory connectionFactory) {
         if (this.eventQueue != null) {
             throw new IllegalStateException("Cannot modify property after initialization");
         }
@@ -982,7 +985,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      * @see com.biasedbit.hotpotato.request.factory.HttpRequestFutureFactory
      * @see com.biasedbit.hotpotato.request.HttpRequestFuture
      */
-    public void setFutureFactory(HttpRequestFutureFactory futureFactory) {
+    public void setFutureFactory(final HttpRequestFutureFactory futureFactory) {
         if (this.eventQueue != null) {
             throw new IllegalStateException("Cannot modify property after initialization");
         }
@@ -1009,7 +1012,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @see com.biasedbit.hotpotato.client.timeout.TimeoutManager
      */
-    public void setTimeoutManager(TimeoutManager timeoutManager) {
+    public void setTimeoutManager(final TimeoutManager timeoutManager) {
         if (this.eventQueue != null) {
             throw new IllegalStateException("Cannot modify property after initialization");
         }
@@ -1039,7 +1042,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
      *
      * @see com.biasedbit.hotpotato.client.host.HostContext
      */
-    public void setCleanupInactiveHostContexts(boolean cleanupInactiveHostContexts) {
+    public void setCleanupInactiveHostContexts(final boolean cleanupInactiveHostContexts) {
         if (this.eventQueue != null) {
             throw new IllegalStateException("Cannot modify property after initialization");
         }
@@ -1053,6 +1056,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
 
     @Override

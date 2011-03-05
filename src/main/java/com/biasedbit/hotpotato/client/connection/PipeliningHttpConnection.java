@@ -16,9 +16,10 @@
 
 package com.biasedbit.hotpotato.client.connection;
 
-import com.biasedbit.hotpotato.client.HttpRequestContext;
-import com.biasedbit.hotpotato.client.timeout.TimeoutManager;
-import com.biasedbit.hotpotato.request.HttpRequestFuture;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.Executor;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -30,9 +31,9 @@ import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.Executor;
+import com.biasedbit.hotpotato.client.HttpRequestContext;
+import com.biasedbit.hotpotato.client.timeout.TimeoutManager;
+import com.biasedbit.hotpotato.request.HttpRequestFuture;
 
 /**
  * Pipelining implementation of {@link HttpConnection} interface.
@@ -90,13 +91,13 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public PipeliningHttpConnection(String id, String host, int port, HttpConnectionListener listener,
-                                    TimeoutManager timeoutManager) {
+    public PipeliningHttpConnection(final String id, final String host, final int port, final HttpConnectionListener listener,
+                                    final TimeoutManager timeoutManager) {
         this(id, host, port, listener, timeoutManager, null);
     }
 
-    public PipeliningHttpConnection(String id, String host, int port, HttpConnectionListener listener,
-                                    TimeoutManager timeoutManager, Executor executor) {
+    public PipeliningHttpConnection(final String id, final String host, final int port, final HttpConnectionListener listener,
+                                    final TimeoutManager timeoutManager, final Executor executor) {
         this.id = id;
         this.host = host;
         this.port = port;
@@ -112,8 +113,9 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
 
     // SimpleChannelUpstreamHandler -----------------------------------------------------------------------------------
 
+
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+    public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
         // Synch this big block, as there is a chance that it's a complete response.
         // If it's a complete response (in other words, all the data necessary to mark the request as finished is
         // present), and it's cancelled meanwhile, synch'ing this block will guarantee that the request will
@@ -163,8 +165,9 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
         }
     }
 
+
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+    public void exceptionCaught(final ChannelHandlerContext ctx, final ExceptionEvent e) throws Exception {
         if (this.channel == null) {
             return;
         }
@@ -186,8 +189,9 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
         }
     }
 
+
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelConnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
         this.channel = e.getChannel();
         synchronized (this.mutex) {
             // Testing terminate == null just in case terminate was issued meanwhile... will hardly ever happen.
@@ -198,8 +202,9 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
         this.listener.connectionOpened(this);
     }
 
+
     @Override
-    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelDisconnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
         synchronized (this.mutex) {
             if (this.terminate == null) {
                 this.terminate = HttpRequestFuture.CONNECTION_LOST;
@@ -209,8 +214,9 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
         this.listener.connectionTerminated(this, this.requests);
     }
 
+
     @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelClosed(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
         if (this.channel == null) {
             // No need for any extra steps since isAvailable only turns true when channel connects.
             // Simply notify the listener that the connection failed.
@@ -220,7 +226,7 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
 
     // HttpConnection -------------------------------------------------------------------------------------------------
 
-    @Override
+
     public void terminate() {
         synchronized (this.mutex) {
             if (this.terminate != null) {
@@ -235,22 +241,22 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
         }
     }
 
-    @Override
+
     public String getId() {
         return this.id;
     }
 
-    @Override
+
     public String getHost() {
         return this.host;
     }
 
-    @Override
+
     public int getPort() {
         return this.port;
     }
 
-    @Override
+
     public boolean isAvailable() {
         return !this.willClose &&
                (this.requests.size() < this.maxRequestsInPipeline) &&
@@ -259,7 +265,7 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
                this.channel.isConnected();
     }
 
-    @Override
+
     public boolean execute(final HttpRequestContext context) {
         if (context == null) {
             throw new IllegalArgumentException("HttpRequestContext cannot be null");
@@ -313,7 +319,7 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
         if (this.executor != null) {
             // Delegating writes to an executor results in lower throughput but also lower request/response time.
             this.executor.execute(new Runnable() {
-                @Override
+
                 public void run() {
                     try {
                         channel.write(context.getRequest());
@@ -352,7 +358,7 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
 
     // private helpers ------------------------------------------------------------------------------------------------
 
-    private void receivedContentForRequest(ChannelBuffer content, boolean last) {
+    private void receivedContentForRequest(final ChannelBuffer content, final boolean last) {
         // This method does not need any particular synchronization to ensure currentRequest doesn't change its state
         // to null during processing, since it's always called inside a synchronized() block.
         if (this.discarding) {
@@ -396,7 +402,7 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
      * @param response HttpResponse received
      */
     @SuppressWarnings({"unchecked"})
-    private void receivedResponseForRequest(HttpResponse response) {
+    private void receivedResponseForRequest(final HttpResponse response) {
         // This method does not need any particular synchronization to ensure currentRequest doesn't change its state
         // to null during processing, since it's always called inside a synchronized() block.
 
@@ -457,7 +463,7 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
      *         Whether this {@code HttpConnection} should explicitly disconnect after executing a non-keepalive
      *         request.
      */
-    public void setDisconnectIfNonKeepAliveRequest(boolean disconnectIfNonKeepAliveRequest) {
+    public void setDisconnectIfNonKeepAliveRequest(final boolean disconnectIfNonKeepAliveRequest) {
         this.disconnectIfNonKeepAliveRequest = disconnectIfNonKeepAliveRequest;
     }
 
@@ -473,7 +479,7 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
      *
      * @param allowNonIdempotentPipelining Whether this {@link HttpConnection} should accept non-idempotent operations.
      */
-    public void setAllowNonIdempotentPipelining(boolean allowNonIdempotentPipelining) {
+    public void setAllowNonIdempotentPipelining(final boolean allowNonIdempotentPipelining) {
         this.allowNonIdempotentPipelining = allowNonIdempotentPipelining;
     }
 
@@ -488,11 +494,12 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
      *
      * @param maxRequestsInPipeline Number of maximum pipelined requests.
      */
-    public void setMaxRequestsInPipeline(int maxRequestsInPipeline) {
+    public void setMaxRequestsInPipeline(final int maxRequestsInPipeline) {
         this.maxRequestsInPipeline = maxRequestsInPipeline;
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {

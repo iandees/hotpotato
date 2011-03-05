@@ -16,22 +16,6 @@
 
 package com.biasedbit.hotpotato.session;
 
-import com.biasedbit.hotpotato.client.CannotExecuteRequestException;
-import com.biasedbit.hotpotato.client.HttpClient;
-import com.biasedbit.hotpotato.request.DefaultHttpRequestFuture;
-import com.biasedbit.hotpotato.request.HttpRequestFuture;
-import com.biasedbit.hotpotato.response.HttpResponseProcessor;
-import com.biasedbit.hotpotato.response.TypedDiscardProcessor;
-import com.biasedbit.hotpotato.session.handler.AuthenticationResponseHandler;
-import com.biasedbit.hotpotato.session.handler.RedirectResponseHandler;
-import com.biasedbit.hotpotato.session.handler.ResponseCodeHandler;
-import com.biasedbit.hotpotato.util.HostPortAndUri;
-import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpVersion;
-
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,6 +26,23 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+import org.jboss.netty.handler.codec.http.HttpMethod;
+import org.jboss.netty.handler.codec.http.HttpRequest;
+import org.jboss.netty.handler.codec.http.HttpVersion;
+
+import com.biasedbit.hotpotato.client.CannotExecuteRequestException;
+import com.biasedbit.hotpotato.client.HttpClient;
+import com.biasedbit.hotpotato.request.DefaultHttpRequestFuture;
+import com.biasedbit.hotpotato.request.HttpRequestFuture;
+import com.biasedbit.hotpotato.response.HttpResponseProcessor;
+import com.biasedbit.hotpotato.response.TypedDiscardProcessor;
+import com.biasedbit.hotpotato.session.handler.AuthenticationResponseHandler;
+import com.biasedbit.hotpotato.session.handler.RedirectResponseHandler;
+import com.biasedbit.hotpotato.session.handler.ResponseCodeHandler;
+import com.biasedbit.hotpotato.util.HostPortAndUri;
 
 /**
  * Default implementation of {@link HttpSession}.
@@ -107,11 +108,11 @@ public class DefaultHttpSession implements HttpSession, HandlerSessionFacade {
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public DefaultHttpSession(HttpClient client) {
+    public DefaultHttpSession(final HttpClient client) {
         this(client, null);
     }
 
-    public DefaultHttpSession(HttpClient client, HttpClient httpsClient) {
+    public DefaultHttpSession(final HttpClient client, final HttpClient httpsClient) {
         if (client.isHttps()) {
             throw new IllegalArgumentException("HTTP client must not have SSL (HTTPS) support active");
         }
@@ -133,32 +134,32 @@ public class DefaultHttpSession implements HttpSession, HandlerSessionFacade {
         this.addHandler(new RedirectResponseHandler());
     }
 
-    @Override
-    public HttpRequestFuture<Void> execute(String path, HttpVersion version, HttpMethod method)
+
+    public HttpRequestFuture<Void> execute(final String path, final HttpVersion version, final HttpMethod method)
             throws CannotExecuteRequestException {
         return this.internalExecute(path, new DefaultHttpRequest(version, method, path), null);
     }
 
-    @Override
-    public <T> HttpRequestFuture<T> execute(String path, HttpVersion version, HttpMethod method,
-                                            HttpResponseProcessor<T> responseProcessor)
+
+    public <T> HttpRequestFuture<T> execute(final String path, final HttpVersion version, final HttpMethod method,
+                                            final HttpResponseProcessor<T> responseProcessor)
             throws CannotExecuteRequestException {
         return this.internalExecute(path, new DefaultHttpRequest(version, method, path), responseProcessor);
     }
 
-    @Override
-    public <T> HttpRequestFuture<T> execute(String path, HttpRequest request) throws CannotExecuteRequestException {
+
+    public <T> HttpRequestFuture<T> execute(final String path, final HttpRequest request) throws CannotExecuteRequestException {
         return this.internalExecute(path, request, null);
     }
 
-    @Override
-    public <T> HttpRequestFuture<T> execute(String path, HttpRequest request,
-                                            HttpResponseProcessor<T> responseProcessor)
+
+    public <T> HttpRequestFuture<T> execute(final String path, final HttpRequest request,
+                                            final HttpResponseProcessor<T> responseProcessor)
             throws CannotExecuteRequestException {
         return this.internalExecute(path, request, responseProcessor);
     }
 
-    @Override
+
     public <T> HttpRequestFuture<T> execute(final HostPortAndUri target, final HttpRequestFuture<T> initialFuture,
                                             final HttpRequest request, final HttpResponseProcessor<T> responseProcessor)
             throws CannotExecuteRequestException {
@@ -227,8 +228,8 @@ public class DefaultHttpSession implements HttpSession, HandlerSessionFacade {
         return internalFuture;
     }
 
-    @Override
-    public void addHeader(String headerName, String headerValue) {
+
+    public void addHeader(final String headerName, final String headerValue) {
         this.headerWriteLock.lock();
         try {
             // Avoid adding duplicate headers... for that we have to traverse all currently set headers...
@@ -245,8 +246,8 @@ public class DefaultHttpSession implements HttpSession, HandlerSessionFacade {
         }
     }
 
-    @Override
-    public void setHeader(String headerName, String headerValue) {
+
+    public void setHeader(final String headerName, final String headerValue) {
         this.headerWriteLock.lock();
         try {
             Iterator<Map.Entry<String, String>> it = this.headers.iterator();
@@ -268,8 +269,8 @@ public class DefaultHttpSession implements HttpSession, HandlerSessionFacade {
         }
     }
 
-    @Override
-    public void removeHeaders(String headerName) {
+
+    public void removeHeaders(final String headerName) {
         this.headerWriteLock.lock();
         try {
             Iterator<Map.Entry<String, String>> it = this.headers.iterator();
@@ -284,39 +285,39 @@ public class DefaultHttpSession implements HttpSession, HandlerSessionFacade {
         }
     }
 
-    @Override
+
     public Collection<Map.Entry<String, String>> getHeaders() {
         return Collections.unmodifiableCollection(this.headers);
     }
 
-    @Override
-    public void addHandler(ResponseCodeHandler handler) {
+
+    public void addHandler(final ResponseCodeHandler handler) {
         for (int i : handler.handlesResponseCodes()) {
             this.handlers.put(i, handler);
         }
     }
 
-    @Override
-    public void removeHandler(int[] codes) {
+
+    public void removeHandler(final int[] codes) {
         for (int code : codes) {
             this.handlers.remove(code);
         }
     }
 
-    @Override
-    public void removeHandler(ResponseCodeHandler handler) {
+
+    public void removeHandler(final ResponseCodeHandler handler) {
         for (int i : handler.handlesResponseCodes()) {
             this.handlers.remove(i);
         }
     }
 
-    @Override
-    public ResponseCodeHandler getHandler(int code) {
+
+    public ResponseCodeHandler getHandler(final int code) {
         return this.handlers.get(code);
     }
 
-    @Override
-    public void setProxy(String host, int port) {
+
+    public void setProxy(final String host, final int port) {
         if ((port <= 0) || (port >= 65536)) {
             throw new IllegalArgumentException("Port must be in range 1-65535");
         }
@@ -324,36 +325,36 @@ public class DefaultHttpSession implements HttpSession, HandlerSessionFacade {
         this.proxyPort = port;
     }
 
-    @Override
+
     public String getProxyHost() {
         return this.proxyHost;
     }
 
-    @Override
+
     public int getProxyPort() {
         return this.proxyPort;
     }
 
-    @Override
-    public void setAuthCredentials(String username, String password) {
+
+    public void setAuthCredentials(final String username, final String password) {
         this.username = username;
         this.password = password;
     }
 
-    @Override
+
     public String getUsername() {
         return this.username;
     }
 
-    @Override
+
     public String getPassword() {
         return this.password;
     }
 
     // private helpers ------------------------------------------------------------------------------------------------
 
-    private <T> HttpRequestFuture<T> internalExecute(String path, HttpRequest request,
-                                                     HttpResponseProcessor<T> processor)
+    private <T> HttpRequestFuture<T> internalExecute(final String path, final HttpRequest request,
+                                                     final HttpResponseProcessor<T> processor)
             throws CannotExecuteRequestException {
 
         HostPortAndUri hostPortAndUri = HostPortAndUri.splitUrl(path);
@@ -383,7 +384,7 @@ public class DefaultHttpSession implements HttpSession, HandlerSessionFacade {
      *
      * @param maxRedirects Max number of redirects allowed.
      */
-    public void setMaxRedirects(int maxRedirects) {
+    public void setMaxRedirects(final int maxRedirects) {
         if (maxRedirects < 0) {
             throw new IllegalArgumentException("MaxRedirects min value is 0");
         }

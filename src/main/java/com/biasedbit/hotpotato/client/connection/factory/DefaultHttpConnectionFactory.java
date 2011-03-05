@@ -16,12 +16,12 @@
 
 package com.biasedbit.hotpotato.client.connection.factory;
 
+import java.util.concurrent.Executor;
+
 import com.biasedbit.hotpotato.client.connection.DefaultHttpConnection;
 import com.biasedbit.hotpotato.client.connection.HttpConnection;
 import com.biasedbit.hotpotato.client.connection.HttpConnectionListener;
 import com.biasedbit.hotpotato.client.timeout.TimeoutManager;
-
-import java.util.concurrent.Executor;
 
 /**
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
@@ -47,15 +47,15 @@ public class DefaultHttpConnectionFactory implements HttpConnectionFactory {
 
     // HttpConnectionFactory ------------------------------------------------------------------------------------------
 
-    @Override
-    public HttpConnection createConnection(String id, String host, int port, HttpConnectionListener listener,
-                                           TimeoutManager timeoutManager) {
+
+    public HttpConnection createConnection(final String id, final String host, final int port, final HttpConnectionListener listener,
+                                           final TimeoutManager timeoutManager) {
         return this.createConnection(id, host, port, listener, timeoutManager, null);
     }
 
-    @Override
-    public HttpConnection createConnection(String id, String host, int port, HttpConnectionListener listener,
-                                           TimeoutManager timeoutManager, Executor executor) {
+
+    public HttpConnection createConnection(final String id, final String host, final int port, final HttpConnectionListener listener,
+                                           final TimeoutManager timeoutManager, final Executor executor) {
         DefaultHttpConnection connection =
                 new DefaultHttpConnection(id, host, port, listener, timeoutManager, executor);
         connection.setDisconnectIfNonKeepAliveRequest(this.disconnectIfNonKeepAliveRequest);
@@ -78,7 +78,7 @@ public class DefaultHttpConnectionFactory implements HttpConnectionFactory {
      *         Whether the generated {@link HttpConnection}s should explicitly disconnect after executing a
      *         non-keepalive request.
      */
-    public void setDisconnectIfNonKeepAliveRequest(boolean disconnectIfNonKeepAliveRequest) {
+    public void setDisconnectIfNonKeepAliveRequest(final boolean disconnectIfNonKeepAliveRequest) {
         this.disconnectIfNonKeepAliveRequest = disconnectIfNonKeepAliveRequest;
     }
 
@@ -102,7 +102,7 @@ public class DefaultHttpConnectionFactory implements HttpConnectionFactory {
      *         Whether the generated {@link HttpConnection} should restore non-idempotent operations when the
      *         connection goes down.
      */
-    public void setRestoreNonIdempotentOperations(boolean restoreNonIdempotentOperations) {
+    public void setRestoreNonIdempotentOperations(final boolean restoreNonIdempotentOperations) {
         this.restoreNonIdempotentOperations = restoreNonIdempotentOperations;
     }
 }

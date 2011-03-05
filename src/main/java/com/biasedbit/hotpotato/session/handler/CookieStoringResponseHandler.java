@@ -16,14 +16,15 @@
 
 package com.biasedbit.hotpotato.session.handler;
 
+import java.util.List;
+
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+
 import com.biasedbit.hotpotato.request.HttpRequestFuture;
 import com.biasedbit.hotpotato.response.HttpResponseProcessor;
 import com.biasedbit.hotpotato.session.HandlerSessionFacade;
 import com.biasedbit.hotpotato.session.RecursiveAwareHttpRequest;
 import com.biasedbit.hotpotato.util.HostPortAndUri;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
-
-import java.util.List;
 
 /**
  * Automatically stores Set-Cookie headers received in 200 responses.
@@ -32,15 +33,15 @@ import java.util.List;
  */
 public class CookieStoringResponseHandler implements ResponseCodeHandler {
 
-    @Override
+
     public int[] handlesResponseCodes() {
         return new int[]{200};
     }
 
-    @Override
-    public <T> void handleResponse(HandlerSessionFacade session, HttpRequestFuture<T> originalFuture,
-                                   HttpRequestFuture<T> future, HostPortAndUri target,
-                                   RecursiveAwareHttpRequest request, HttpResponseProcessor<T> processor) {
+
+    public <T> void handleResponse(final HandlerSessionFacade session, final HttpRequestFuture<T> originalFuture,
+                                   final HttpRequestFuture<T> future, final HostPortAndUri target,
+                                   final RecursiveAwareHttpRequest request, final HttpResponseProcessor<T> processor) {
 
         // Store the cookies...
         List<String> cookies = future.getResponse().getHeaders(HttpHeaders.Names.SET_COOKIE);
