@@ -206,6 +206,8 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
     @Override
     public void channelDisconnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
         synchronized (this.mutex) {
+            // Remove this from the pipeline otherwise there is a circular reference that keeps the objects alive
+            this.channel.getPipeline().remove(this);
             if (this.terminate == null) {
                 this.terminate = HttpRequestFuture.CONNECTION_LOST;
             }
@@ -221,6 +223,9 @@ public class PipeliningHttpConnection extends SimpleChannelUpstreamHandler imple
             // No need for any extra steps since isAvailable only turns true when channel connects.
             // Simply notify the listener that the connection failed.
             this.listener.connectionFailed(this);
+        } else {
+            // Remove this from the pipeline otherwise there is a circular reference that keeps the objects alive
+            this.channel.getPipeline().remove(this);
         }
     }
 

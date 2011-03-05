@@ -192,6 +192,8 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
     public void channelDisconnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
         HttpRequestContext request = null;
         synchronized (this.mutex) {
+            this.channel.getPipeline().remove(this);
+
             if (this.terminate == null) {
                 this.terminate = HttpRequestFuture.CONNECTION_LOST;
                 this.available = false;
@@ -220,6 +222,8 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
             // No need for any extra steps since available only turns true when channel connects.
             // Simply notify the listener that the connection failed.
             this.listener.connectionFailed(this);
+        } else {
+            this.channel.getPipeline().remove(this);
         }
     }
 
