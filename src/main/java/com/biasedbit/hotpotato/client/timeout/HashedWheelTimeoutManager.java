@@ -16,6 +16,7 @@
 
 package com.biasedbit.hotpotato.client.timeout;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.netty.util.HashedWheelTimer;
@@ -24,6 +25,7 @@ import org.jboss.netty.util.TimerTask;
 
 import com.biasedbit.hotpotato.client.HttpRequestContext;
 import com.biasedbit.hotpotato.request.HttpRequestFuture;
+import com.biasedbit.hotpotato.request.HttpRequestFutureListener;
 
 /**
  * Implementation of timeout manager that uses an underlying {@link HashedWheelTimer} to manage timeouts.
@@ -43,6 +45,24 @@ import com.biasedbit.hotpotato.request.HttpRequestFuture;
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  */
 public class HashedWheelTimeoutManager implements TimeoutManager {
+
+    private static class FutureTimeout<T> implements HttpRequestFutureListener<T>
+    {
+        private final WeakReference<Timeout> httpTimeout; // A weak reference to avoid circular references
+
+        public FutureTimeout(final Timeout t)
+        {
+            httpTimeout = new WeakReference<Timeout>(t);
+        }
+
+        public void operationComplete(final HttpRequestFuture<T> future) throws Exception {
+            Timeout t = httpTimeout.get();
+            if (null != t)
+            {
+                t.cancel();
+            }
+        }
+    }
 
     // configuration --------------------------------------------------------------------------------------------------
 
@@ -96,6 +116,7 @@ public class HashedWheelTimeoutManager implements TimeoutManager {
                 }
             }
         };
-        this.timer.newTimeout(task, context.getTimeout(), TimeUnit.MILLISECONDS);
+        Timeout t = this.timer.newTimeout(task, context.getTimeout(), TimeUnit.MILLISECONDS);
+        context.getFuture().addListener(new FutureTimeout(t));
     }
 }
