@@ -38,6 +38,7 @@ import com.biasedbit.hotpotato.request.factory.DefaultHttpRequestFutureFactory;
 import com.biasedbit.hotpotato.request.factory.HttpRequestFutureFactory;
 import com.biasedbit.hotpotato.response.DiscardProcessor;
 import com.biasedbit.hotpotato.response.HttpResponseProcessor;
+import com.biasedbit.hotpotato.security.SSLContextFactory;
 import com.biasedbit.hotpotato.util.CleanupChannelGroup;
 import com.biasedbit.hotpotato.util.NamedThreadFactory;
 import org.jboss.netty.bootstrap.ClientBootstrap;
@@ -156,6 +157,10 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
     protected static final int MAX_EVENT_PROCESSOR_HELPER_THREADS = 20;
     protected static final boolean CLEANUP_INACTIVE_HOST_CONTEXTS = true;
 
+    // Default to "SecureChatSslContextFactory" for backwards compatibility even
+    // though it's doubtful that anyone is actually using it.
+    protected static final SSLContextFactory DEFAULT_SSL_CONTEXT_FACTORY = SecureChatSslContextFactory.getInstance();
+
     // configuration --------------------------------------------------------------------------------------------------
 
     protected boolean useSsl;
@@ -189,6 +194,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
     protected CountDownLatch eventConsumerLatch;
     protected volatile boolean terminate;
     protected boolean internalTimeoutManager;
+    protected SSLContextFactory sslContextFactory;
 
     // constructors ---------------------------------------------------------------------------------------------------
 
@@ -211,6 +217,8 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
         // No need for synchronized structures here, as they'll be accessed by a single thread
         this.contextMap = new HashMap<String, HostContext>();
+
+        this.sslContextFactory = DEFAULT_SSL_CONTEXT_FACTORY;
     }
 
     // HttpClient -----------------------------------------------------------------------------------------------------
@@ -258,7 +266,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
                 if (useSsl) {
-                    SSLEngine engine = SecureChatSslContextFactory.getServerContext().createSSLEngine();
+                    SSLEngine engine = sslContextFactory.getServerContext().createSSLEngine();
                     engine.setUseClientMode(true);
                     pipeline.addLast("ssl", new SslHandler(engine));
                 }
@@ -667,6 +675,16 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         this.useSsl = useSsl;
     }
 
+    public SSLContextFactory getSSLContextFactory()
+    {
+        return sslContextFactory;
+    }
+
+    public void setSSLContextFactory(SSLContextFactory sslContextFactory)
+    {
+        this.sslContextFactory = sslContextFactory;
+    }
+
     public int getRequestCompressionLevel() {
         return requestCompressionLevel;
     }
@@ -1058,3 +1076,4 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         return this.getClass().getSimpleName() + '@' + Integer.toHexString(this.hashCode());
     }
 }
+
