@@ -268,8 +268,9 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
+
                 if (useSsl) {
-                    SSLEngine engine = sslContextFactory.getServerContext().createSSLEngine();
+                    SSLEngine engine = sslContextFactory.getClientContext().createSSLEngine();
                     engine.setUseClientMode(true);
                     pipeline.addLast("ssl", new SslHandler(engine));
                 }
@@ -285,6 +286,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
                 if (aggregateResponseChunks) {
                     pipeline.addLast("aggregator", new HttpChunkAggregator(1048576));
                 }
+
                 return pipeline;
             }
         };
