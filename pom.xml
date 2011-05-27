@@ -100,23 +100,6 @@
 
   <build>
     <plugins>
-      <!-- (TEMP) exec -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.1</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>java</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <mainClass>com.biasedbit.hotpotato.security.Main</mainClass>
-        </configuration>
-      </plugin>
-
       <!-- Compiler configuration -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
