@@ -16,14 +16,14 @@
 
 package com.biasedbit.hotpotato.response;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.util.CharsetUtil;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * {@link HttpResponseProcessor} that consumes a body and transforms it into a UTF8 string.
@@ -45,11 +45,11 @@ public class BodyAsStringProcessor implements HttpResponseProcessor<String> {
         this.acceptedCodes = null;
     }
 
-    public BodyAsStringProcessor(List<Integer> acceptedCodes) {
+    public BodyAsStringProcessor(final List<Integer> acceptedCodes) {
         this.acceptedCodes = acceptedCodes;
     }
 
-    public BodyAsStringProcessor(int... acceptedCodes) {
+    public BodyAsStringProcessor(final int... acceptedCodes) {
         this.acceptedCodes = new ArrayList<Integer>(acceptedCodes.length);
         for (int acceptedCode : acceptedCodes) {
             this.acceptedCodes.add(acceptedCode);
@@ -58,8 +58,8 @@ public class BodyAsStringProcessor implements HttpResponseProcessor<String> {
 
     // HttpResponseProcessor ------------------------------------------------------------------------------------------
 
-    @Override
-    public boolean willProcessResponse(HttpResponse response) {
+
+    public boolean willProcessResponse(final HttpResponse response) {
         if ((this.acceptedCodes != null) && !this.acceptedCodes.contains(response.getStatus().getCode())) {
             return false;
         }
@@ -102,15 +102,15 @@ public class BodyAsStringProcessor implements HttpResponseProcessor<String> {
         return false;
     }
 
-    @Override
-    public void addData(ChannelBuffer content) throws Exception {
+
+    public void addData(final ChannelBuffer content) throws Exception {
         if (!this.finished) {
             this.buffer.writeBytes(content);
         }
     }
 
-    @Override
-    public void addLastData(ChannelBuffer content) throws Exception {
+
+    public void addLastData(final ChannelBuffer content) throws Exception {
         if (!this.finished) {
             this.buffer.writeBytes(content);
             this.result = this.buffer.toString(CharsetUtil.UTF_8);
@@ -119,7 +119,7 @@ public class BodyAsStringProcessor implements HttpResponseProcessor<String> {
         }
     }
 
-    @Override
+
     public String getProcessedResponse() {
         return this.result;
     }

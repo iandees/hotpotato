@@ -16,13 +16,13 @@
 
 package com.biasedbit.hotpotato.client.host;
 
-import com.biasedbit.hotpotato.client.ConnectionPool;
-import com.biasedbit.hotpotato.client.HttpRequestContext;
-import com.biasedbit.hotpotato.client.connection.HttpConnection;
-
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
+
+import com.biasedbit.hotpotato.client.ConnectionPool;
+import com.biasedbit.hotpotato.client.HttpRequestContext;
+import com.biasedbit.hotpotato.client.connection.HttpConnection;
 
 /**
  * Abstract implementation of the {@link HostContext} interface.
@@ -45,7 +45,7 @@ public abstract class AbstractHostContext implements HostContext {
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public AbstractHostContext(String host, int port, int maxConnections) {
+    public AbstractHostContext(final String host, final int port, final int maxConnections) {
         if (maxConnections <= 0) {
             throw new IllegalArgumentException("MaxConnections must be > 0");
         }
@@ -59,37 +59,37 @@ public abstract class AbstractHostContext implements HostContext {
 
     // HostContext ----------------------------------------------------------------------------------------------------
 
-    @Override
+
     public String getHost() {
         return this.host;
     }
 
-    @Override
+
     public int getPort() {
         return this.port;
     }
 
-    @Override
+
     public ConnectionPool getConnectionPool() {
         return this.connectionPool;
     }
 
-    @Override
+
     public Queue<HttpRequestContext> getQueue() {
         return this.queue;
     }
 
-    @Override
-    public void restoreRequestsToQueue(Collection<HttpRequestContext> requests) {
+
+    public void restoreRequestsToQueue(final Collection<HttpRequestContext> requests) {
         this.queue.addAll(0, requests);
     }
 
-    @Override
-    public void addToQueue(HttpRequestContext request) {
+
+    public void addToQueue(final HttpRequestContext request) {
         this.queue.add(request);
     }
 
-    @Override
+
     public DrainQueueResult drainQueue() {
         // 1. Test if there's anything to drain
         if (this.queue.isEmpty()) {
@@ -128,13 +128,13 @@ public abstract class AbstractHostContext implements HostContext {
         }
     }
 
-    @Override
+
     public HttpRequestContext pollQueue() {
         return this.queue.poll();
     }
 
-    @Override
-    public void failAllRequests(Throwable cause) {
+
+    public void failAllRequests(final Throwable cause) {
         for (HttpRequestContext context : this.queue) {
             context.getFuture().setFailure(cause);
         }

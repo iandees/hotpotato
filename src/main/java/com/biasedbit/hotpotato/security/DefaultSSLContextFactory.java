@@ -104,11 +104,9 @@ public class DefaultSSLContextFactory implements SSLContextFactory
         public DefaultSSLContextFactory build() throws Exception
         {
             // Falling Back to defaults if user code has called build() without
-            // fully populating this builder...
-
-            // FIXME !!!
-            // We probably want to get this stuff from conf or at least hardcode
-            // some better defaults since I'm just guessing here...
+            // fully populating this builder.
+            // We may want to get this stuff from conf since these defaults will
+            // not work on all platforms.
             if (null == algorithm) {
                 algorithm = "SunX509";
             }

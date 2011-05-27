@@ -16,15 +16,16 @@
 
 package com.biasedbit.hotpotato.request;
 
-import com.biasedbit.hotpotato.logging.Logger;
-import org.jboss.netty.handler.codec.http.HttpResponse;
-import org.jboss.netty.handler.codec.http.HttpResponseStatus;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.jboss.netty.handler.codec.http.HttpResponse;
+import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+
+import com.biasedbit.hotpotato.logging.Logger;
 
 /**
  * Implementation of {@link HttpRequestFuture} that resorts to stuff in {@linkplain java.util.concurrent} package.
@@ -32,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Uses less synchronization blocks which is potentially faster for high concurrency scenarios.
  *
  * @deprecated Use {@link com.biasedbit.hotpotato.request.DefaultHttpRequestFuture} instead; it's faster and safer.
- * 
+ *
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  */
 @Deprecated
@@ -65,7 +66,7 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         this(false);
     }
 
-    public ConcurrentHttpRequestFuture(boolean cancellable) {
+    public ConcurrentHttpRequestFuture(final boolean cancellable) {
         this.cancellable = cancellable;
         this.creation = System.nanoTime();
         this.executionStart = -1;
@@ -78,17 +79,17 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
 
     // HttpRequestFuture ----------------------------------------------------------------------------------------------
 
-    @Override
+
     public T getProcessedResult() {
         return this.result;
     }
 
-    @Override
+
     public HttpResponse getResponse() {
         return this.response;
     }
 
-    @Override
+
     public HttpResponseStatus getStatus() {
         if (this.response == null) {
             return null;
@@ -96,7 +97,7 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return this.response.getStatus();
     }
 
-    @Override
+
     public int getResponseStatusCode() {
         if (this.response == null) {
             return -1;
@@ -105,18 +106,18 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return this.response.getStatus().getCode();
     }
 
-    @Override
+
     public boolean isSuccessfulResponse() {
         int code = this.getResponseStatusCode();
         return (code >= 200) && (code <= 299);
     }
 
-    @Override
+
     public void markExecutionStart() {
         this.executionStart = System.nanoTime();
     }
 
-    @Override
+
     public long getExecutionTime() {
         if (this.done.get()) {
             return this.executionStart == -1 ? 0 : (this.executionEnd - this.executionStart) / 1000000;
@@ -125,7 +126,7 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    @Override
+
     public long getExistenceTime() {
         if (this.done.get()) {
             return (this.executionEnd - this.creation) / 1000000;
@@ -134,27 +135,27 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    @Override
+
     public boolean isDone() {
         return this.done.get();
     }
 
-    @Override
+
     public boolean isSuccess() {
         return this.response != null;
     }
 
-    @Override
+
     public boolean isCancelled() {
         return this.cause == CANCELLED;
     }
 
-    @Override
+
     public Throwable getCause() {
         return this.cause;
     }
 
-    @Override
+
     public boolean cancel() {
         if (!this.cancellable) {
             return false;
@@ -174,8 +175,8 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return true;
     }
 
-    @Override
-    public boolean setSuccess(T processedResponse, HttpResponse response) {
+
+    public boolean setSuccess(final T processedResponse, final HttpResponse response) {
         // Get previous value and set to true
         if (this.done.getAndSet(true)) {
             // If previous value was already true, then bail out.
@@ -191,8 +192,8 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return true;
     }
 
-    @Override
-    public boolean setFailure(Throwable cause) {
+
+    public boolean setFailure(final Throwable cause) {
         // Get previous value and set to true
         if (this.done.getAndSet(true)) {
             // If previous value was already true, then bail out.
@@ -207,8 +208,8 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return true;
     }
 
-    @Override
-    public boolean setFailure(HttpResponse response, Throwable cause) {
+
+    public boolean setFailure(final HttpResponse response, final Throwable cause) {
         // Get previous value and set to true
         if (this.done.getAndSet(true)) {
             // If previous value was already true, then bail out.
@@ -224,8 +225,8 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return true;
     }
 
-    @Override
-    public void addListener(HttpRequestFutureListener<T> listener) {
+
+    public void addListener(final HttpRequestFutureListener<T> listener) {
         if (this.done.get()) {
             this.notifyListener(listener);
             return;
@@ -241,8 +242,8 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    @Override
-    public void removeListener(HttpRequestFutureListener<T> listener) {
+
+    public void removeListener(final HttpRequestFutureListener<T> listener) {
         if (this.done.get()) {
             return;
         }
@@ -254,17 +255,17 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    @Override
+
     public Object getAttachment() {
         return attachment;
     }
 
-    @Override
-    public void setAttachment(Object attachment) {
+
+    public void setAttachment(final Object attachment) {
         this.attachment = attachment;
     }
 
-    @Override
+
     public HttpRequestFuture<T> await() throws InterruptedException {
         if (Thread.interrupted()) {
             throw new InterruptedException();
@@ -275,17 +276,17 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return this;
     }
 
-    @Override
-    public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+
+    public boolean await(final long timeout, final TimeUnit unit) throws InterruptedException {
         return this.waitLatch.await(timeout, unit);
     }
 
-    @Override
-    public boolean await(long timeoutMillis) throws InterruptedException {
+
+    public boolean await(final long timeoutMillis) throws InterruptedException {
         return this.waitLatch.await(timeoutMillis, TimeUnit.MILLISECONDS);
     }
 
-    @Override
+
     public HttpRequestFuture<T> awaitUninterruptibly() {
         boolean interrupted = false;
         while (!this.done.get() || (this.waitLatch.getCount() > 0)) {
@@ -305,8 +306,8 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return this;
     }
 
-    @Override
-    public boolean awaitUninterruptibly(long timeout, TimeUnit unit) {
+
+    public boolean awaitUninterruptibly(final long timeout, final TimeUnit unit) {
         long start;
         long waitTime = unit.toNanos(timeout);
         boolean interrupted = false;
@@ -330,8 +331,8 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return onTime;
     }
 
-    @Override
-    public boolean awaitUninterruptibly(long timeoutMillis) {
+
+    public boolean awaitUninterruptibly(final long timeoutMillis) {
         return this.awaitUninterruptibly(timeoutMillis, TimeUnit.MILLISECONDS);
     }
 
@@ -345,7 +346,7 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    private void notifyListener(HttpRequestFutureListener<T> listener) {
+    private void notifyListener(final HttpRequestFutureListener<T> listener) {
         try {
             listener.operationComplete(this);
         } catch (Throwable t) {
@@ -354,6 +355,7 @@ public class ConcurrentHttpRequestFuture<T> implements HttpRequestFuture<T> {
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {

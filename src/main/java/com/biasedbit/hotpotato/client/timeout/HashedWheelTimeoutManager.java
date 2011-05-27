@@ -16,13 +16,16 @@
 
 package com.biasedbit.hotpotato.client.timeout;
 
-import com.biasedbit.hotpotato.client.HttpRequestContext;
-import com.biasedbit.hotpotato.request.HttpRequestFuture;
+import java.lang.ref.WeakReference;
+import java.util.concurrent.TimeUnit;
+
 import org.jboss.netty.util.HashedWheelTimer;
 import org.jboss.netty.util.Timeout;
 import org.jboss.netty.util.TimerTask;
 
-import java.util.concurrent.TimeUnit;
+import com.biasedbit.hotpotato.client.HttpRequestContext;
+import com.biasedbit.hotpotato.request.HttpRequestFuture;
+import com.biasedbit.hotpotato.request.HttpRequestFutureListener;
 
 /**
  * Implementation of timeout manager that uses an underlying {@link HashedWheelTimer} to manage timeouts.
@@ -43,6 +46,24 @@ import java.util.concurrent.TimeUnit;
  */
 public class HashedWheelTimeoutManager implements TimeoutManager {
 
+    private static class FutureTimeout<T> implements HttpRequestFutureListener<T>
+    {
+        private final WeakReference<Timeout> httpTimeout; // A weak reference to avoid circular references
+
+        public FutureTimeout(final Timeout t)
+        {
+            httpTimeout = new WeakReference<Timeout>(t);
+        }
+
+        public void operationComplete(final HttpRequestFuture<T> future) throws Exception {
+            Timeout t = httpTimeout.get();
+            if (null != t)
+            {
+                t.cancel();
+            }
+        }
+    }
+
     // configuration --------------------------------------------------------------------------------------------------
 
     private final HashedWheelTimer timer;
@@ -58,19 +79,19 @@ public class HashedWheelTimeoutManager implements TimeoutManager {
         this.internalTimer = true;
     }
 
-    public HashedWheelTimeoutManager(long tickDuration, TimeUnit unit, int ticksPerWheel) {
+    public HashedWheelTimeoutManager(final long tickDuration, final TimeUnit unit, final int ticksPerWheel) {
         this.timer = new HashedWheelTimer(tickDuration, unit, ticksPerWheel);
         this.internalTimer = true;
     }
 
-    public HashedWheelTimeoutManager(HashedWheelTimer timer) {
+    public HashedWheelTimeoutManager(final HashedWheelTimer timer) {
         this.timer = timer;
         this.internalTimer = false;
     }
 
     // TimeoutManager -------------------------------------------------------------------------------------------------
 
-    @Override
+
     public boolean init() {
         if (this.internalTimer) {
             this.timer.start();
@@ -78,23 +99,24 @@ public class HashedWheelTimeoutManager implements TimeoutManager {
         return true;
     }
 
-    @Override
+
     public void terminate() {
         if (this.internalTimer) {
             this.timer.stop();
         }
     }
 
-    @Override
+
     public void manageRequestTimeout(final HttpRequestContext context) {
         TimerTask task = new TimerTask() {
-            @Override
-            public void run(Timeout timeout) throws Exception {
+
+            public void run(final Timeout timeout) throws Exception {
                 if (timeout.isExpired()) {
                     context.getFuture().setFailure(HttpRequestFuture.TIMED_OUT);
                 }
             }
         };
-        this.timer.newTimeout(task, context.getTimeout(), TimeUnit.MILLISECONDS);
+        Timeout t = this.timer.newTimeout(task, context.getTimeout(), TimeUnit.MILLISECONDS);
+        context.getFuture().addListener(new FutureTimeout(t));
     }
 }

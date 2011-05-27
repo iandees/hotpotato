@@ -56,20 +56,20 @@ public class TypedDiscardProcessor<T> implements HttpResponseProcessor<T> {
 
     // HttpResponseProcessor ------------------------------------------------------------------------------------------
 
-    @Override
-    public boolean willProcessResponse(HttpResponse response) {
+
+    public boolean willProcessResponse(final HttpResponse response) {
         return false;
     }
 
-    @Override
-    public void addData(ChannelBuffer content) throws Exception {
+
+    public void addData(final ChannelBuffer content) throws Exception {
     }
 
-    @Override
-    public void addLastData(ChannelBuffer content) throws Exception {
+
+    public void addLastData(final ChannelBuffer content) throws Exception {
     }
 
-    @Override
+
     public T getProcessedResponse() {
         return null;
     }

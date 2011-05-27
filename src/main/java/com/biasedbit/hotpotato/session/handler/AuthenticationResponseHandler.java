@@ -16,6 +16,14 @@
 
 package com.biasedbit.hotpotato.session.handler;
 
+import java.text.ParseException;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.handler.codec.base64.Base64;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+import org.jboss.netty.util.CharsetUtil;
+
 import com.biasedbit.hotpotato.request.HttpRequestFuture;
 import com.biasedbit.hotpotato.response.HttpResponseProcessor;
 import com.biasedbit.hotpotato.session.HandlerSessionFacade;
@@ -25,13 +33,6 @@ import com.biasedbit.hotpotato.util.HostPortAndUri;
 import com.biasedbit.hotpotato.util.digest.DigestAuthChallenge;
 import com.biasedbit.hotpotato.util.digest.DigestAuthChallengeResponse;
 import com.biasedbit.hotpotato.util.digest.DigestUtils;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.handler.codec.base64.Base64;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
-import org.jboss.netty.util.CharsetUtil;
-
-import java.text.ParseException;
 
 /**
  * Handles 401 responses.
@@ -45,15 +46,15 @@ public class AuthenticationResponseHandler implements ResponseCodeHandler {
 
     // ResponseCodeHandler --------------------------------------------------------------------------------------------
 
-    @Override
+
     public int[] handlesResponseCodes() {
         return new int[]{401};
     }
 
-    @Override
-    public <T> void handleResponse(HandlerSessionFacade session, HttpRequestFuture<T> initialFuture,
-                                   HttpRequestFuture<T> future, HostPortAndUri target,
-                                   RecursiveAwareHttpRequest request, HttpResponseProcessor<T> processor) {
+
+    public <T> void handleResponse(final HandlerSessionFacade session, final HttpRequestFuture<T> initialFuture,
+                                   final HttpRequestFuture<T> future, final HostPortAndUri target,
+                                   final RecursiveAwareHttpRequest request, final HttpResponseProcessor<T> processor) {
         if (request.isFailedAuth()) {
             // Do not retry auth.
             initialFuture.setSuccess(future.getProcessedResult(), future.getResponse());
@@ -89,9 +90,9 @@ public class AuthenticationResponseHandler implements ResponseCodeHandler {
 
     // private helpers ------------------------------------------------------------------------------------------------
 
-    private <T> void handleBasicAuthentication(HandlerSessionFacade session, HttpRequestFuture<T> initialFuture,
-                                               HostPortAndUri target, RecursiveAwareHttpRequest request,
-                                               HttpResponseProcessor<T> processor) {
+    private <T> void handleBasicAuthentication(final HandlerSessionFacade session, final HttpRequestFuture<T> initialFuture,
+                                               final HostPortAndUri target, final RecursiveAwareHttpRequest request,
+                                               final HttpResponseProcessor<T> processor) {
 
         String userAndPass = session.getUsername() + ':' + session.getPassword();
         ChannelBuffer buffer = ChannelBuffers.copiedBuffer(userAndPass, CharsetUtil.US_ASCII);
@@ -102,10 +103,10 @@ public class AuthenticationResponseHandler implements ResponseCodeHandler {
         nextWrapper.addListener(new HttpSessionFutureListener<T>(session, nextWrapper, target, request, processor));
     }
 
-    private <T> void handleDigestAuthentication(HandlerSessionFacade session, HttpRequestFuture<T> initialFuture,
-                                                HttpRequestFuture<T> future, HostPortAndUri target,
-                                                RecursiveAwareHttpRequest request, HttpResponseProcessor<T> processor,
-                                                String header) {
+    private <T> void handleDigestAuthentication(final HandlerSessionFacade session, final HttpRequestFuture<T> initialFuture,
+                                                final HttpRequestFuture<T> future, final HostPortAndUri target,
+                                                final RecursiveAwareHttpRequest request, final HttpResponseProcessor<T> processor,
+                                                final String header) {
         DigestAuthChallenge challenge;
         try {
             challenge = DigestAuthChallenge.createFromHeader(header);

@@ -121,8 +121,8 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.5</source>
+          <target>1.5</target>
         </configuration>
       </plugin>
 
@@ -360,7 +360,7 @@
         <version>2.2</version>
         <configuration>
           <downloadSources>true</downloadSources>
-          <jdkLevel>1.6</jdkLevel>
+          <jdkLevel>1.5</jdkLevel>
         </configuration>
       </plugin>
     </plugins>

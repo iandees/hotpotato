@@ -16,6 +16,13 @@
 
 package com.biasedbit.hotpotato.util;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.net.ssl.SSLEngine;
+
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -44,12 +51,6 @@ import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.util.CharsetUtil;
-
-import javax.net.ssl.SSLEngine;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A simple HttpServer with configurable error introduction.
@@ -119,7 +120,7 @@ public class DummyHttpServer {
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public DummyHttpServer(String host, int port) {
+    public DummyHttpServer(final String host, final int port) {
         this.host = host;
         this.port = port;
         this.errors = new AtomicInteger();
@@ -131,7 +132,7 @@ public class DummyHttpServer {
         this.useOldIo = USE_OLD_IO;
     }
 
-    public DummyHttpServer(int port) {
+    public DummyHttpServer(final int port) {
         this(null, port);
     }
 
@@ -148,7 +149,7 @@ public class DummyHttpServer {
 
         this.bootstrap.setOption("child.tcpNoDelay", true);
         this.bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-            @Override
+
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
 
@@ -195,7 +196,7 @@ public class DummyHttpServer {
         return useSsl;
     }
 
-    public void setUseSsl(boolean useSsl) {
+    public void setUseSsl(final boolean useSsl) {
         this.useSsl = useSsl;
     }
 
@@ -203,7 +204,7 @@ public class DummyHttpServer {
         return failureProbability;
     }
 
-    public void setFailureProbability(float failureProbability) {
+    public void setFailureProbability(final float failureProbability) {
         if (failureProbability < 0) {
             this.failureProbability = 0;
         } else if (failureProbability > 1.0) {
@@ -217,7 +218,7 @@ public class DummyHttpServer {
         return responseLatency;
     }
 
-    public void setResponseLatency(long responseLatency) {
+    public void setResponseLatency(final long responseLatency) {
         this.responseLatency = responseLatency;
     }
 
@@ -225,7 +226,7 @@ public class DummyHttpServer {
         return useOldIo;
     }
 
-    public void setUseOldIo(boolean useOldIo) {
+    public void setUseOldIo(final boolean useOldIo) {
         this.useOldIo = useOldIo;
     }
 
@@ -233,7 +234,7 @@ public class DummyHttpServer {
         return content;
     }
 
-    public void setContent(String content) {
+    public void setContent(final String content) {
         this.content = content;
     }
 
@@ -250,12 +251,12 @@ public class DummyHttpServer {
         // SimpleChannelUpstreamHandler -------------------------------------------------------------------------------
 
         @Override
-        public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        public void channelOpen(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
             channelGroup.add(e.getChannel());
         }
 
         @Override
-        public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
             if (Math.random() <= failureProbability) {
                 errors.incrementAndGet();
                 e.getChannel().close();
@@ -293,7 +294,7 @@ public class DummyHttpServer {
         }
 
         @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+        public void exceptionCaught(final ChannelHandlerContext ctx, final ExceptionEvent e) throws Exception {
             //System.err.println("Exception caught on HTTP connection from " + e.getChannel().getRemoteAddress() +
             //                   "; closing channel.");
             if (e.getChannel().isConnected()) {
@@ -304,7 +305,7 @@ public class DummyHttpServer {
 
     // main -----------------------------------------------------------------------------------------------------------
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         String host = null;
         int port = 80;
         float failureProbability = 0.0f;

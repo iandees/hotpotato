@@ -16,10 +16,10 @@
 
 package com.biasedbit.hotpotato.client.event;
 
+import java.util.Collection;
+
 import com.biasedbit.hotpotato.client.HttpRequestContext;
 import com.biasedbit.hotpotato.client.connection.HttpConnection;
-
-import java.util.Collection;
 
 /**
  * Event generated when an established connection is closed.
@@ -35,14 +35,14 @@ public class ConnectionClosedEvent implements HttpClientEvent {
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public ConnectionClosedEvent(HttpConnection connection, Collection<HttpRequestContext> retryRequests) {
+    public ConnectionClosedEvent(final HttpConnection connection, final Collection<HttpRequestContext> retryRequests) {
         this.connection = connection;
         this.retryRequests = retryRequests;
     }
 
     // HttpClientEvent ------------------------------------------------------------------------------------------------
 
-    @Override
+
     public EventType getEventType() {
         return EventType.CONNECTION_CLOSED;
     }
@@ -58,6 +58,7 @@ public class ConnectionClosedEvent implements HttpClientEvent {
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {

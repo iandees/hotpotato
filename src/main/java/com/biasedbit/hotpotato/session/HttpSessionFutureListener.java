@@ -39,9 +39,9 @@ public class HttpSessionFutureListener<T> implements HttpRequestFutureListener<T
 
     // constructors -----------------------------------------------------------------------------------------------
 
-    public HttpSessionFutureListener(HandlerSessionFacade session, HttpRequestFuture<T> initialFuture,
-                                     HostPortAndUri target, RecursiveAwareHttpRequest request,
-                                     HttpResponseProcessor<T> processor) {
+    public HttpSessionFutureListener(final HandlerSessionFacade session, final HttpRequestFuture<T> initialFuture,
+                                     final HostPortAndUri target, final RecursiveAwareHttpRequest request,
+                                     final HttpResponseProcessor<T> processor) {
         this.session = session;
         this.initialFuture = initialFuture;
         this.target = target;
@@ -51,8 +51,8 @@ public class HttpSessionFutureListener<T> implements HttpRequestFutureListener<T
 
     // HttpRequestFutureListener ----------------------------------------------------------------------------------
 
-    @Override
-    public void operationComplete(HttpRequestFuture<T> future) throws Exception {
+
+    public void operationComplete(final HttpRequestFuture<T> future) throws Exception {
         if (future.isSuccess()) {
             ResponseCodeHandler handler = this.session.getHandler(future.getResponseStatusCode());
             if (handler == null) {

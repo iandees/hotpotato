@@ -50,6 +50,7 @@ public class StatsGatheringHttpClient extends AbstractHttpClient implements Even
 
     // AbstractHttpClient ---------------------------------------------------------------------------------------------
 
+
     @Override
     public void eventHandlingLoop() {
         for (;;) {
@@ -98,13 +99,13 @@ public class StatsGatheringHttpClient extends AbstractHttpClient implements Even
 
     // EventProcessorStatsProvider ------------------------------------------------------------------------------------
 
-    @Override
+
     public long getTotalExecutionTime() {
         return this.totalTime / 1000000;
     }
 
-    @Override
-    public long getEventProcessingTime(EventType event) {
+
+    public long getEventProcessingTime(final EventType event) {
         switch (event) {
             case EXECUTE_REQUEST:
                 return this.executeRequestTime / 1000000;
@@ -121,8 +122,8 @@ public class StatsGatheringHttpClient extends AbstractHttpClient implements Even
         }
     }
 
-    @Override
-    public float getEventProcessingPercentage(EventType event) {
+
+    public float getEventProcessingPercentage(final EventType event) {
         switch (event) {
             case EXECUTE_REQUEST:
                 return (this.executeRequestTime / (float) this.totalTime) * 100;
@@ -139,7 +140,7 @@ public class StatsGatheringHttpClient extends AbstractHttpClient implements Even
         }
     }
 
-    @Override
+
     public long getProcessedEvents() {
         return this.events;
     }

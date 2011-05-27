@@ -16,14 +16,15 @@
 
 package com.biasedbit.hotpotato.session.handler;
 
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+import org.jboss.netty.handler.codec.http.HttpMethod;
+
 import com.biasedbit.hotpotato.client.CannotExecuteRequestException;
 import com.biasedbit.hotpotato.request.HttpRequestFuture;
 import com.biasedbit.hotpotato.response.HttpResponseProcessor;
 import com.biasedbit.hotpotato.session.HandlerSessionFacade;
 import com.biasedbit.hotpotato.session.RecursiveAwareHttpRequest;
 import com.biasedbit.hotpotato.util.HostPortAndUri;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
-import org.jboss.netty.handler.codec.http.HttpMethod;
 
 /**
  * Automatically handles response codes 301, 302, 303 and 309, following the redirection links provided in the
@@ -33,15 +34,15 @@ import org.jboss.netty.handler.codec.http.HttpMethod;
  */
 public class RedirectResponseHandler implements ResponseCodeHandler {
 
-    @Override
+
     public int[] handlesResponseCodes() {
         return new int[]{301, 302, 303, 309};
     }
 
-    @Override
-    public <T> void handleResponse(HandlerSessionFacade session, HttpRequestFuture<T> initialFuture,
-                                   HttpRequestFuture<T> future, HostPortAndUri target,
-                                   RecursiveAwareHttpRequest request, HttpResponseProcessor<T> processor) {
+
+    public <T> void handleResponse(final HandlerSessionFacade session, final HttpRequestFuture<T> initialFuture,
+                                   final HttpRequestFuture<T> future, final HostPortAndUri target,
+                                   final RecursiveAwareHttpRequest request, final HttpResponseProcessor<T> processor) {
 
         if (request.getMethod().equals(HttpMethod.GET) || request.getMethod().equals(HttpMethod.HEAD)) {
             String location = future.getResponse().getHeader(HttpHeaders.Names.LOCATION);

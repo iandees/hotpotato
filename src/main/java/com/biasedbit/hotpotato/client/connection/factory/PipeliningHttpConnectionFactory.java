@@ -16,12 +16,12 @@
 
 package com.biasedbit.hotpotato.client.connection.factory;
 
+import java.util.concurrent.Executor;
+
 import com.biasedbit.hotpotato.client.connection.HttpConnection;
 import com.biasedbit.hotpotato.client.connection.HttpConnectionListener;
 import com.biasedbit.hotpotato.client.connection.PipeliningHttpConnection;
 import com.biasedbit.hotpotato.client.timeout.TimeoutManager;
-
-import java.util.concurrent.Executor;
 
 /**
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
@@ -50,15 +50,15 @@ public class PipeliningHttpConnectionFactory implements HttpConnectionFactory {
 
     // HttpConnectionFactory ------------------------------------------------------------------------------------------
 
-    @Override
-    public HttpConnection createConnection(String id, String host, int port, HttpConnectionListener listener,
-                                        TimeoutManager manager) {
+
+    public HttpConnection createConnection(final String id, final String host, final int port, final HttpConnectionListener listener,
+                                        final TimeoutManager manager) {
         return this.createConnection(id, host, port, listener, manager, null);
     }
 
-    @Override
-    public HttpConnection createConnection(String id, String host, int port, HttpConnectionListener listener,
-                                        TimeoutManager manager, Executor executor) {
+
+    public HttpConnection createConnection(final String id, final String host, final int port, final HttpConnectionListener listener,
+                                        final TimeoutManager manager, final Executor executor) {
         PipeliningHttpConnection connection = new PipeliningHttpConnection(id, host, port, listener, manager, executor);
         connection.setDisconnectIfNonKeepAliveRequest(this.disconnectIfNonKeepAliveRequest);
         connection.setAllowNonIdempotentPipelining(this.allowNonIdempotentPipelining);
@@ -72,7 +72,7 @@ public class PipeliningHttpConnectionFactory implements HttpConnectionFactory {
         return disconnectIfNonKeepAliveRequest;
     }
 
-    public void setDisconnectIfNonKeepAliveRequest(boolean disconnectIfNonKeepAliveRequest) {
+    public void setDisconnectIfNonKeepAliveRequest(final boolean disconnectIfNonKeepAliveRequest) {
         this.disconnectIfNonKeepAliveRequest = disconnectIfNonKeepAliveRequest;
     }
 
@@ -80,7 +80,7 @@ public class PipeliningHttpConnectionFactory implements HttpConnectionFactory {
         return allowNonIdempotentPipelining;
     }
 
-    public void setAllowNonIdempotentPipelining(boolean allowNonIdempotentPipelining) {
+    public void setAllowNonIdempotentPipelining(final boolean allowNonIdempotentPipelining) {
         this.allowNonIdempotentPipelining = allowNonIdempotentPipelining;
     }
 
@@ -88,7 +88,7 @@ public class PipeliningHttpConnectionFactory implements HttpConnectionFactory {
         return maxRequestsInPipeline;
     }
 
-    public void setMaxRequestsInPipeline(int maxRequestsInPipeline) {
+    public void setMaxRequestsInPipeline(final int maxRequestsInPipeline) {
         this.maxRequestsInPipeline = maxRequestsInPipeline;
     }
 }

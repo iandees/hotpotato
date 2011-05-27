@@ -16,13 +16,14 @@
 
 package com.biasedbit.hotpotato.request;
 
-import com.biasedbit.hotpotato.logging.Logger;
-import org.jboss.netty.handler.codec.http.HttpResponse;
-import org.jboss.netty.handler.codec.http.HttpResponseStatus;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import org.jboss.netty.handler.codec.http.HttpResponse;
+import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+
+import com.biasedbit.hotpotato.logging.Logger;
 
 /**
  * Default implementation of {@link HttpRequestFuture}.
@@ -111,7 +112,7 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         this(false);
     }
 
-    public DefaultHttpRequestFuture(boolean cancellable) {
+    public DefaultHttpRequestFuture(final boolean cancellable) {
         this.cancellable = cancellable;
         this.creation = System.nanoTime();
         this.executionStart = -1;
@@ -119,17 +120,17 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
 
     // HttpRequestFuture ----------------------------------------------------------------------------------------------
 
-    @Override
+
     public T getProcessedResult() {
         return this.result;
     }
 
-    @Override
+
     public HttpResponse getResponse() {
         return this.response;
     }
 
-    @Override
+
     public HttpResponseStatus getStatus() {
         if (this.response == null) {
             return null;
@@ -137,7 +138,7 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return this.response.getStatus();
     }
 
-    @Override
+
     public int getResponseStatusCode() {
         if (this.response == null) {
             return -1;
@@ -146,18 +147,18 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return this.response.getStatus().getCode();
     }
 
-    @Override
+
     public boolean isSuccessfulResponse() {
         int code = this.getResponseStatusCode();
         return (code >= 200) && (code <= 299);
     }
 
-    @Override
+
     public void markExecutionStart() {
         this.executionStart = System.nanoTime();
     }
 
-    @Override
+
     public long getExecutionTime() {
         if (this.done) {
             return this.executionStart == -1 ? 0 : (this.executionEnd - this.executionStart) / 1000000;
@@ -166,7 +167,7 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    @Override
+
     public long getExistenceTime() {
         if (this.done) {
             return (this.executionEnd - this.creation) / 1000000;
@@ -175,27 +176,27 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    @Override
+
     public boolean isDone() {
         return this.done;
     }
 
-    @Override
+
     public boolean isSuccess() {
         return this.response != null;
     }
 
-    @Override
+
     public boolean isCancelled() {
         return cause == CANCELLED;
     }
 
-    @Override
+
     public Throwable getCause() {
         return this.cause;
     }
 
-    @Override
+
     public boolean cancel() {
         if (!this.cancellable) {
             return false;
@@ -218,8 +219,8 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return true;
     }
 
-    @Override
-    public boolean setSuccess(T processedResponse, HttpResponse response) {
+
+    public boolean setSuccess(final T processedResponse, final HttpResponse response) {
         synchronized (this) {
             if (this.done) {
                 return false;
@@ -238,8 +239,8 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return true;
     }
 
-    @Override
-    public boolean setFailure(Throwable cause) {
+
+    public boolean setFailure(final Throwable cause) {
         synchronized (this) {
             // Allow only once.
             if (this.done) {
@@ -258,8 +259,8 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return true;
     }
 
-    @Override
-    public boolean setFailure(HttpResponse response, Throwable cause) {
+
+    public boolean setFailure(final HttpResponse response, final Throwable cause) {
         synchronized (this) {
             // Allow only once.
             if (this.done) {
@@ -279,8 +280,8 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return true;
     }
 
-    @Override
-    public void addListener(HttpRequestFutureListener<T> listener) {
+
+    public void addListener(final HttpRequestFutureListener<T> listener) {
         synchronized (this) {
             if (this.done) {
                 this.notifyListener(listener);
@@ -293,8 +294,8 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    @Override
-    public void removeListener(HttpRequestFutureListener<T> listener) {
+
+    public void removeListener(final HttpRequestFutureListener<T> listener) {
         synchronized (this) {
             if (!this.done) {
                 if (this.listeners != null) {
@@ -304,17 +305,17 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    @Override
+
     public Object getAttachment() {
         return attachment;
     }
 
-    @Override
-    public void setAttachment(Object attachment) {
+
+    public void setAttachment(final Object attachment) {
         this.attachment = attachment;
     }
 
-    @Override
+
     public HttpRequestFuture<T> await() throws InterruptedException {
         if (Thread.interrupted()) {
             throw new InterruptedException();
@@ -333,17 +334,17 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return this;
     }
 
-    @Override
-    public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+
+    public boolean await(final long timeout, final TimeUnit unit) throws InterruptedException {
         return await0(unit.toNanos(timeout), true);
     }
 
-    @Override
-    public boolean await(long timeoutMillis) throws InterruptedException {
+
+    public boolean await(final long timeoutMillis) throws InterruptedException {
         return this.await0(TimeUnit.MILLISECONDS.toNanos(timeoutMillis), true);
     }
 
-    @Override
+
     public HttpRequestFuture<T> awaitUninterruptibly() {
         boolean interrupted = false;
         synchronized (this) {
@@ -367,8 +368,8 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         return this;
     }
 
-    @Override
-    public boolean awaitUninterruptibly(long timeout, TimeUnit unit) {
+
+    public boolean awaitUninterruptibly(final long timeout, final TimeUnit unit) {
         try {
             return await0(unit.toNanos(timeout), false);
         } catch (InterruptedException e) {
@@ -376,8 +377,8 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    @Override
-    public boolean awaitUninterruptibly(long timeoutMillis) {
+
+    public boolean awaitUninterruptibly(final long timeoutMillis) {
         try {
             return await0(TimeUnit.MILLISECONDS.toNanos(timeoutMillis), false);
         } catch (InterruptedException e) {
@@ -403,7 +404,7 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    private void notifyListener(HttpRequestFutureListener<T> listener) {
+    private void notifyListener(final HttpRequestFutureListener<T> listener) {
         try {
             listener.operationComplete(this);
         } catch (Throwable t) {
@@ -411,7 +412,7 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
         }
     }
 
-    private boolean await0(long timeoutNanos, boolean interruptable) throws InterruptedException {
+    private boolean await0(final long timeoutNanos, final boolean interruptable) throws InterruptedException {
         if (interruptable && Thread.interrupted()) {
             throw new InterruptedException();
         }
@@ -462,6 +463,7 @@ public class DefaultHttpRequestFuture<T> implements HttpRequestFuture<T> {
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {

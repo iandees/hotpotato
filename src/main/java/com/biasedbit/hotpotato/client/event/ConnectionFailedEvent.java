@@ -31,13 +31,13 @@ public class ConnectionFailedEvent implements HttpClientEvent {
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public ConnectionFailedEvent(HttpConnection connection) {
+    public ConnectionFailedEvent(final HttpConnection connection) {
         this.connection = connection;
     }
 
     // HttpClientEvent ------------------------------------------------------------------------------------------------
 
-    @Override
+
     public EventType getEventType() {
         return EventType.CONNECTION_FAILED;
     }
@@ -49,6 +49,7 @@ public class ConnectionFailedEvent implements HttpClientEvent {
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {

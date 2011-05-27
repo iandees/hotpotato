@@ -16,9 +16,9 @@
 
 package com.biasedbit.hotpotato.client.connection;
 
-import com.biasedbit.hotpotato.client.HttpRequestContext;
-import com.biasedbit.hotpotato.client.timeout.TimeoutManager;
-import com.biasedbit.hotpotato.request.HttpRequestFuture;
+import java.util.Arrays;
+import java.util.concurrent.Executor;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -30,8 +30,9 @@ import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
-import java.util.Arrays;
-import java.util.concurrent.Executor;
+import com.biasedbit.hotpotato.client.HttpRequestContext;
+import com.biasedbit.hotpotato.client.timeout.TimeoutManager;
+import com.biasedbit.hotpotato.request.HttpRequestFuture;
 
 /**
  * Non-pipelining implementation of {@link HttpConnection} interface.
@@ -82,13 +83,13 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
 
     // constructors ---------------------------------------------------------------------------------------------------
 
-    public DefaultHttpConnection(String id, String host, int port, HttpConnectionListener listener,
-                                 TimeoutManager timeoutManager) {
+    public DefaultHttpConnection(final String id, final String host, final int port, final HttpConnectionListener listener,
+                                 final TimeoutManager timeoutManager) {
         this(id, host, port, listener, timeoutManager, null);
     }
 
-    public DefaultHttpConnection(String id, String host, int port, HttpConnectionListener listener,
-                                 TimeoutManager timeoutManager, Executor executor) {
+    public DefaultHttpConnection(final String id, final String host, final int port, final HttpConnectionListener listener,
+                                 final TimeoutManager timeoutManager, final Executor executor) {
         this.id = id;
         this.host = host;
         this.port = port;
@@ -102,8 +103,9 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
 
     // SimpleChannelUpstreamHandler -----------------------------------------------------------------------------------
 
+
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+    public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
         // Synch this big block, as there is a chance that it's a complete response.
         // If it's a complete response (in other words, all the data necessary to mark the request as finished is
         // present), and it's cancelled meanwhile, synch'ing this block will guarantee that the request will
@@ -153,8 +155,9 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
         }
     }
 
+
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+    public void exceptionCaught(final ChannelHandlerContext ctx, final ExceptionEvent e) throws Exception {
         if (this.channel == null) {
             return;
         }
@@ -170,8 +173,9 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
         }
     }
 
+
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelConnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
         this.channel = e.getChannel();
         synchronized (this.mutex) {
             // Just in case terminate was issued meanwhile... will hardly ever happen.
@@ -183,10 +187,13 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
         this.listener.connectionOpened(this);
     }
 
+
     @Override
-    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelDisconnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
         HttpRequestContext request = null;
         synchronized (this.mutex) {
+            this.channel.getPipeline().remove(this);
+
             if (this.terminate == null) {
                 this.terminate = HttpRequestFuture.CONNECTION_LOST;
                 this.available = false;
@@ -208,18 +215,21 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
         }
     }
 
+
     @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelClosed(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {
         if (this.channel == null) {
             // No need for any extra steps since available only turns true when channel connects.
             // Simply notify the listener that the connection failed.
             this.listener.connectionFailed(this);
+        } else {
+            this.channel.getPipeline().remove(this);
         }
     }
 
     // HttpConnection -------------------------------------------------------------------------------------------------
 
-    @Override
+
     public void terminate() {
         synchronized (this.mutex) {
             // Already terminated, nothing to do here.
@@ -241,27 +251,27 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
         }
     }
 
-    @Override
+
     public String getId() {
         return this.id;
     }
 
-    @Override
+
     public String getHost() {
         return this.host;
     }
 
-    @Override
+
     public int getPort() {
         return this.port;
     }
 
-    @Override
+
     public boolean isAvailable() {
         return this.available;
     }
 
-    @Override
+
     public boolean execute(final HttpRequestContext context) {
         if (context == null) {
             throw new IllegalArgumentException("HttpRequestContext cannot be null");
@@ -301,7 +311,7 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
         if (this.executor != null) {
             // Delegating writes to an executor results in lower throughput but also lower request/response time.
             this.executor.execute(new Runnable() {
-                @Override
+
                 public void run() {
                     try {
                         channel.write(context.getRequest());
@@ -336,7 +346,7 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
 
     // private helpers ------------------------------------------------------------------------------------------------
 
-    private void receivedContentForCurrentRequest(ChannelBuffer content, boolean last) {
+    private void receivedContentForCurrentRequest(final ChannelBuffer content, final boolean last) {
         // This method does not need any particular synchronization to ensure currentRequest doesn't change its state
         // to null during processing, since it's always called inside a synchronized() block.
         if (this.discarding) {
@@ -378,7 +388,7 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
      * @param response HttpResponse received
      */
     @SuppressWarnings({"unchecked"})
-    private void receivedResponseForCurrentRequest(HttpResponse response) {
+    private void receivedResponseForCurrentRequest(final HttpResponse response) {
         // This method does not need any particular synchronization to ensure currentRequest doesn't change its state
         // to null during processing, since it's always called inside a synchronized() block.
 
@@ -417,7 +427,7 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
         // Only signal as available if the connection will be kept alive and if terminate hasn't been issued AND
         // the channel is still connected.
         this.available = HttpHeaders.isKeepAlive(this.currentResponse) &&
-                         this.terminate == null &&
+                         (this.terminate == null) &&
                          this.channel.isConnected();
 
         this.currentRequest = null;
@@ -447,7 +457,7 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
      *         Whether this {@code HttpConnection} should explicitly disconnect after executing a non-keepalive
      *         request.
      */
-    public void setDisconnectIfNonKeepAliveRequest(boolean disconnectIfNonKeepAliveRequest) {
+    public void setDisconnectIfNonKeepAliveRequest(final boolean disconnectIfNonKeepAliveRequest) {
         this.disconnectIfNonKeepAliveRequest = disconnectIfNonKeepAliveRequest;
     }
 
@@ -470,11 +480,12 @@ public class DefaultHttpConnection extends SimpleChannelUpstreamHandler implemen
      * @param restoreNonIdempotentOperations Whether this {@code HttpConnection} should restore non-idempotent
      *                                       operations when the connection goes down.
      */
-    public void setRestoreNonIdempotentOperations(boolean restoreNonIdempotentOperations) {
+    public void setRestoreNonIdempotentOperations(final boolean restoreNonIdempotentOperations) {
         this.restoreNonIdempotentOperations = restoreNonIdempotentOperations;
     }
 
     // low level overrides --------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {

@@ -48,6 +48,7 @@ public class VerboseHttpClient extends AbstractHttpClient implements EventProces
 
     // AbstractHttpClient ---------------------------------------------------------------------------------------------
 
+
     @Override
     protected void eventHandlingLoop() {
         for (;;) {
@@ -103,8 +104,9 @@ public class VerboseHttpClient extends AbstractHttpClient implements EventProces
         }
     }
 
+
     @Override
-    protected void handleConnectionFailed(ConnectionFailedEvent event) {
+    protected void handleConnectionFailed(final ConnectionFailedEvent event) {
         // Update the list of available connections for the same host:port.
         String id = this.hostId(event.getConnection());
         HostContext context = this.contextMap.get(id);
@@ -115,7 +117,7 @@ public class VerboseHttpClient extends AbstractHttpClient implements EventProces
 
         context.getConnectionPool().connectionFailed();
         if ((context.getConnectionPool().hasConnectionFailures() &&
-             context.getConnectionPool().getTotalConnections() == 0)) {
+             (context.getConnectionPool().getTotalConnections() == 0))) {
             LOG.trace("[EHL-hCF] Last of connection attempts for {} failed; cancelling all queued requests.", id);
             // Connection failures occured and there are no more connections active or establishing, so its time to
             // fail all queued requests.
@@ -123,8 +125,9 @@ public class VerboseHttpClient extends AbstractHttpClient implements EventProces
         }
     }
 
+
     @Override
-    protected void drainQueueAndProcessResult(HostContext context) {
+    protected void drainQueueAndProcessResult(final HostContext context) {
         HostContext.DrainQueueResult result = context.drainQueue();
         LOG.trace("[EHL-dQAPR] drainQueue() result was {}.", result);
         switch (result) {
@@ -138,21 +141,22 @@ public class VerboseHttpClient extends AbstractHttpClient implements EventProces
         }
     }
 
+
     @Override
-    protected void openConnection(HostContext context) {
+    protected void openConnection(final HostContext context) {
         LOG.trace("[EHL-OC] Opening connection to {}.", this.hostId(context));
         super.openConnection(context);
     }
 
     // EventProcessorStatsProvider ------------------------------------------------------------------------------------
 
-    @Override
+
     public long getTotalExecutionTime() {
         return this.totalTime / 1000000;
     }
 
-    @Override
-    public long getEventProcessingTime(EventType event) {
+
+    public long getEventProcessingTime(final EventType event) {
         switch (event) {
             case EXECUTE_REQUEST:
                 return this.executeRequestTime / 1000000;
@@ -169,8 +173,8 @@ public class VerboseHttpClient extends AbstractHttpClient implements EventProces
         }
     }
 
-    @Override
-    public float getEventProcessingPercentage(EventType event) {
+
+    public float getEventProcessingPercentage(final EventType event) {
         switch (event) {
             case EXECUTE_REQUEST:
                 return (this.executeRequestTime / (float) this.totalTime) * 100;
@@ -187,7 +191,7 @@ public class VerboseHttpClient extends AbstractHttpClient implements EventProces
         }
     }
 
-    @Override
+
     public long getProcessedEvents() {
         return this.events;
     }
