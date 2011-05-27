@@ -160,8 +160,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
     protected static final int MAX_EVENT_PROCESSOR_HELPER_THREADS = 20;
     protected static final boolean CLEANUP_INACTIVE_HOST_CONTEXTS = true;
 
-    // Default to "SecureChatSslContextFactory" for backwards compatibility even
-    // though it's doubtful that anyone is actually using it.
+    // Default to SecureChatSslContextFactory for backwards compatibility...
     protected static final SSLContextFactory DEFAULT_SSL_CONTEXT_FACTORY = SecureChatSslContextFactory.getInstance();
 
     // configuration --------------------------------------------------------------------------------------------------
@@ -242,6 +241,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         if (this.connectionFactory == null) {
             this.connectionFactory = new DefaultHttpConnectionFactory();
         }
+
         if (this.futureFactory == null) {
             this.futureFactory = new DefaultHttpRequestFutureFactory();
         }
@@ -270,6 +270,13 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
                 ChannelPipeline pipeline = Channels.pipeline();
 
                 if (useSsl) {
+                    if (null == sslContextFactory) {
+                        throw new IllegalStateException(
+                            "Cannot establish ssl connection because an " +
+                            "SSLContextFactory was not provided"
+                        );
+                    }
+
                     SSLEngine engine = sslContextFactory.getClientContext().createSSLEngine();
                     engine.setUseClientMode(true);
                     pipeline.addLast("ssl", new SslHandler(engine));
@@ -280,9 +287,11 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
                 }
 
                 pipeline.addLast("codec", new HttpClientCodec(4096, 8192, requestChunkSize));
+
                 if (autoInflate) {
                     pipeline.addLast("inflater", new HttpContentDecompressor());
                 }
+
                 if (aggregateResponseChunks) {
                     pipeline.addLast("aggregator", new HttpChunkAggregator(1048576));
                 }
@@ -386,6 +395,8 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
             this.queuedRequests.decrementAndGet();
             throw new CannotExecuteRequestException("Request queue is full");
         }
+
+        request.setHeader(HttpHeaders.Names.HOST, host);
 
         // Perform these checks on the caller thread's time rather than the event dispatcher's.
         if (this.autoInflate) {
@@ -645,17 +656,15 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
                 bootstrap.setOption("reuseAddress", true);
                 bootstrap.setOption("connectTimeoutMillis", connectionTimeoutInMillis);
                 bootstrap.setPipeline(pipeline);
-                bootstrap.connect(new InetSocketAddress(context.getHost(), context.getPort()))
-                        .addListener(new ChannelFutureListener() {
-
-                            public void operationComplete(final ChannelFuture future) throws Exception {
-                                if (future.isSuccess()) {
-                                    // Don't even bother checking if client was already instructed to terminate since
-                                    // CleanupChannelGroup takes care of that.
-                                    channelGroup.add(future.getChannel());
-                                }
-                            }
-                        });
+                bootstrap.connect(new InetSocketAddress(context.getHost(), context.getPort())).addListener(new ChannelFutureListener() {
+                    public void operationComplete(final ChannelFuture future) throws Exception {
+                        if (future.isSuccess()) {
+                            // Don't even bother checking if client was already instructed to terminate since
+                            // CleanupChannelGroup takes care of that.
+                            channelGroup.add(future.getChannel());
+                        }
+                    }
+                });
             }
         });
     }
