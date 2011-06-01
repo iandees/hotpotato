@@ -20,8 +20,6 @@ import javax.net.ssl.SSLContext;
 import java.security.KeyStore;
 import java.security.Security;
 
-import com.biasedbit.hotpotato.security.SSLContextFactory;
-
 /**
  * Creates a bogus {@link javax.net.ssl.SSLContext}.  A client-side context created by this
  * factory accepts any certificate even if it is invalid.  A server-side context
@@ -34,7 +32,7 @@ import com.biasedbit.hotpotato.security.SSLContextFactory;
  *
  * @version $Rev: 183008 $, $Date: 2008-11-18 20:44:38 -0500 (Tue, 18 Nov 2008) $
  */
-public class SecureChatSslContextFactory implements SSLContextFactory {
+public class SecureChatSslContextFactory {
 
     private static final String PROTOCOL = "TLS";
 

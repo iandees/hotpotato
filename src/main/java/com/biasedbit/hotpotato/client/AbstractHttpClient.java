@@ -30,6 +30,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLContext;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.ChannelFactory;
@@ -41,7 +42,6 @@ import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.channel.socket.oio.OioClientSocketChannelFactory;
-import org.jboss.netty.example.securechat.SecureChatSslContextFactory;
 import org.jboss.netty.handler.codec.http.HttpChunkAggregator;
 import org.jboss.netty.handler.codec.http.HttpClientCodec;
 import org.jboss.netty.handler.codec.http.HttpContentCompressor;
@@ -73,7 +73,6 @@ import com.biasedbit.hotpotato.request.factory.DefaultHttpRequestFutureFactory;
 import com.biasedbit.hotpotato.request.factory.HttpRequestFutureFactory;
 import com.biasedbit.hotpotato.response.DiscardProcessor;
 import com.biasedbit.hotpotato.response.HttpResponseProcessor;
-import com.biasedbit.hotpotato.security.SSLContextFactory;
 import com.biasedbit.hotpotato.util.CleanupChannelGroup;
 import com.biasedbit.hotpotato.util.NamedThreadFactory;
 
@@ -160,9 +159,6 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
     protected static final int MAX_EVENT_PROCESSOR_HELPER_THREADS = 20;
     protected static final boolean CLEANUP_INACTIVE_HOST_CONTEXTS = true;
 
-    // Default to SecureChatSslContextFactory for backwards compatibility...
-    protected static final SSLContextFactory DEFAULT_SSL_CONTEXT_FACTORY = SecureChatSslContextFactory.getInstance();
-
     // configuration --------------------------------------------------------------------------------------------------
 
     protected boolean useSsl;
@@ -196,7 +192,7 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
     protected CountDownLatch eventConsumerLatch;
     protected volatile boolean terminate;
     protected boolean internalTimeoutManager;
-    protected SSLContextFactory sslContextFactory;
+    protected SSLContext sslContext = null;
 
     // constructors ---------------------------------------------------------------------------------------------------
 
@@ -219,8 +215,6 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
         // No need for synchronized structures here, as they'll be accessed by a single thread
         this.contextMap = new HashMap<String, HostContext>();
-
-        this.sslContextFactory = DEFAULT_SSL_CONTEXT_FACTORY;
     }
 
     // HttpClient -----------------------------------------------------------------------------------------------------
@@ -241,7 +235,6 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         if (this.connectionFactory == null) {
             this.connectionFactory = new DefaultHttpConnectionFactory();
         }
-
         if (this.futureFactory == null) {
             this.futureFactory = new DefaultHttpRequestFutureFactory();
         }
@@ -268,34 +261,26 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
-
                 if (useSsl) {
-                    if (null == sslContextFactory) {
+                    if (null == sslContext) {
                         throw new IllegalStateException(
-                            "Cannot establish ssl connection because an " +
-                            "SSLContextFactory was not provided"
+                            "Cannot establish ssl connection because no SSLContext was provided"
                         );
                     }
-
-                    SSLEngine engine = sslContextFactory.getClientContext().createSSLEngine();
+                    SSLEngine engine = sslContext.createSSLEngine();
                     engine.setUseClientMode(true);
                     pipeline.addLast("ssl", new SslHandler(engine));
                 }
-
                 if (requestCompressionLevel > 0) {
                     pipeline.addLast("deflater", new HttpContentCompressor(requestCompressionLevel));
                 }
-
                 pipeline.addLast("codec", new HttpClientCodec(4096, 8192, requestChunkSize));
-
                 if (autoInflate) {
                     pipeline.addLast("inflater", new HttpContentDecompressor());
                 }
-
                 if (aggregateResponseChunks) {
                     pipeline.addLast("aggregator", new HttpChunkAggregator(1048576));
                 }
-
                 return pipeline;
             }
         };
@@ -395,8 +380,6 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
             this.queuedRequests.decrementAndGet();
             throw new CannotExecuteRequestException("Request queue is full");
         }
-
-        request.setHeader(HttpHeaders.Names.HOST, host);
 
         // Perform these checks on the caller thread's time rather than the event dispatcher's.
         if (this.autoInflate) {
@@ -691,14 +674,14 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         this.useSsl = useSsl;
     }
 
-    public SSLContextFactory getSSLContextFactory()
+    public SSLContext getSSLContext()
     {
-        return sslContextFactory;
+        return sslContext;
     }
 
-    public void setSSLContextFactory(SSLContextFactory sslContextFactory)
+    public void setSSLContext(SSLContext sslContext)
     {
-        this.sslContextFactory = sslContextFactory;
+        this.sslContext = sslContext;
     }
 
     public int getRequestCompressionLevel() {
