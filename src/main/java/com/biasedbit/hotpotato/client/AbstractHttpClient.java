@@ -244,8 +244,9 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
         // TODO instead of fixed size thread pool, use a cached thread pool with size limit (limited growth cached pool)
         this.executor = Executors.newFixedThreadPool(this.maxEventProcessorHelperThreads,
-                                                     new NamedThreadFactory("hpttHandyman"));
-        Executor workerPool = Executors.newFixedThreadPool(this.maxIoWorkerThreads);
+                                                     new NamedThreadFactory("httpHandyman"));
+        Executor workerPool = Executors.newFixedThreadPool(this.maxIoWorkerThreads,
+                                                     new NamedThreadFactory("httpWorkers"));
 
         if (this.useNio) {
             // It's only going to create 1 thread, so no harm done here.
