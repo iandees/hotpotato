@@ -157,7 +157,6 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
     protected static final int MAX_CONNECTIONS_PER_HOST = 3;
     protected static final int MAX_QUEUED_REQUESTS = Short.MAX_VALUE;
     protected static final boolean USE_NIO = false;
-    protected static final int MIN_IO_WORKER_THREADS = 1;
     protected static final int MAX_IO_WORKER_THREADS = 50;
     protected static final int WORKER_THREAD_KEEPALIVE_SECONDS = 30;
     protected static final int MAX_EVENT_PROCESSOR_HELPER_THREADS = 20;
@@ -175,7 +174,6 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
     protected int connectionTimeoutInMillis;
     protected int requestTimeoutInMillis;
     protected boolean useNio;
-    protected int minIoWorkerThreads;
     protected int maxIoWorkerThreads;
     protected int workerThreadKeepaliveTimeSeconds;
     protected int maxEventProcessorHelperThreads;
@@ -214,7 +212,6 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
         this.maxQueuedRequests = MAX_QUEUED_REQUESTS;
         this.useNio = USE_NIO;
         this.maxIoWorkerThreads = MAX_IO_WORKER_THREADS;
-        this.minIoWorkerThreads = MIN_IO_WORKER_THREADS;
         this.workerThreadKeepaliveTimeSeconds = WORKER_THREAD_KEEPALIVE_SECONDS;
         this.maxEventProcessorHelperThreads = MAX_EVENT_PROCESSOR_HELPER_THREADS;
         this.cleanupInactiveHostContexts = CLEANUP_INACTIVE_HOST_CONTEXTS;
@@ -252,11 +249,12 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
         this.executor = Executors.newFixedThreadPool(this.maxEventProcessorHelperThreads,
                                                      new NamedThreadFactory("httpHandyman"));
-        Executor workerPool = new ThreadPoolExecutor(this.minIoWorkerThreads,
+        ThreadPoolExecutor workerPool = new ThreadPoolExecutor(this.maxIoWorkerThreads,
         		                                     this.maxIoWorkerThreads,
         		                                     this.workerThreadKeepaliveTimeSeconds, TimeUnit.SECONDS,
         		                                     new LinkedBlockingQueue<Runnable>(),
                                                      new NamedThreadFactory("httpWorkers"));
+        workerPool.allowCoreThreadTimeOut(true);
 
         if (this.useNio) {
             // It's only going to create 1 thread, so no harm done here.
@@ -925,27 +923,6 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
             throw new IllegalStateException("Cannot modify property after initialization");
         }
         this.workerThreadKeepaliveTimeSeconds = workerThreadKeepaliveTime;
-    }
-
-    public int getMinIoWorkerThreads() {
-        return minIoWorkerThreads;
-    }
-
-    /**
-     * Minimum (core) number of worker threads for the executor provided to Netty's {@link ChannelFactory}.
-     * <p/>
-     * Defaults to 1.
-     *
-     * @param minIoWorkerThreads Minimum number of IO worker threads.
-     */
-    public void setMinIoWorkerThreads(final int minIoWorkerThreads) {
-        if (minIoWorkerThreads < 0) {
-            throw new IllegalArgumentException("Minimum value for minIoWorkerThreads is 0");
-        }
-        if (this.eventQueue != null) {
-            throw new IllegalStateException("Cannot modify property after initialization");
-        }
-        this.minIoWorkerThreads = minIoWorkerThreads;
     }
 
     public int getMaxIoWorkerThreads() {
