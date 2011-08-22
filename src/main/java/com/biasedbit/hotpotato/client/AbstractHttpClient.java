@@ -227,8 +227,25 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
 
     // HttpClient -----------------------------------------------------------------------------------------------------
 
-
     public boolean init() {
+        Executor executor = Executors.newFixedThreadPool(this.maxEventProcessorHelperThreads,
+                                                     new NamedThreadFactory("httpHandyman"));
+        ThreadPoolExecutor workerPool = new ThreadPoolExecutor(this.maxIoWorkerThreads,
+        		                                     this.maxIoWorkerThreads,
+        		                                     this.workerThreadKeepaliveTimeSeconds, TimeUnit.SECONDS,
+        		                                     new LinkedBlockingQueue<Runnable>(),
+                                                     new NamedThreadFactory("httpWorkers"));
+        workerPool.allowCoreThreadTimeOut(true);
+        
+        return init(executor, workerPool);
+    }
+    
+    /**
+     * @param httpExecutor The executor that handles connection/disconnection events internal to hotpotato.
+     * @param workerExecutor The executor that handles work from netty IO.
+     * @return True if the initialization worked.
+     */
+    public boolean init(Executor httpExecutor, Executor workerExecutor) {
         if (this.timeoutManager == null) {
             // Consumes less resources, puts less emphasis on precision.
             this.timeoutManager = new HashedWheelTimeoutManager();
