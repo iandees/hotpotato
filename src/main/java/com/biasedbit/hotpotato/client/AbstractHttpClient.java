@@ -230,12 +230,11 @@ public abstract class AbstractHttpClient implements HttpClient, HttpConnectionLi
     public boolean init() {
         Executor executor = Executors.newFixedThreadPool(this.maxEventProcessorHelperThreads,
                                                      new NamedThreadFactory("httpHandyman"));
-        ThreadPoolExecutor workerPool = new ThreadPoolExecutor(this.maxIoWorkerThreads,
+        ThreadPoolExecutor workerPool = new ThreadPoolExecutor(this.minIoWorkerThreads,
         		                                     this.maxIoWorkerThreads,
         		                                     this.workerThreadKeepaliveTimeSeconds, TimeUnit.SECONDS,
         		                                     new LinkedBlockingQueue<Runnable>(),
                                                      new NamedThreadFactory("httpWorkers"));
-        workerPool.allowCoreThreadTimeOut(true);
         
         return init(executor, workerPool);
     }
